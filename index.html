@@ -76,8 +76,8 @@
         </div>
       </div>
 
-      <!-- Compact AI Multimodal Processing Banner -->
-      <div class="mt-2 bg-slate-900/90 border border-emerald-500/35 rounded-xl px-2.5 py-1.5 shadow-sm">
+      <!-- Dynamic Header Banner (Updates on Login / Logout) -->
+      <div id="headerDynamicBanner" class="mt-2 bg-slate-900/90 border border-emerald-500/35 rounded-xl px-2.5 py-1.5 shadow-sm hidden">
         <div class="flex items-center gap-1.5">
           <span class="text-emerald-400 text-xs flex-shrink-0">👁️</span>
           <div class="text-[10.5px] text-slate-300 leading-snug">
@@ -93,8 +93,8 @@
       <!-- Injected via JavaScript -->
     </main>
 
-    <!-- Native-Style Bottom Navigation Bar -->
-    <nav class="absolute bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 grid grid-cols-5 py-2 px-1 text-center select-none z-20 shadow-2xl">
+    <!-- Native-Style Bottom Navigation Bar (Hidden when on Login Screen) -->
+    <nav id="appBottomNav" class="absolute bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 grid grid-cols-5 py-2 px-1 text-center select-none z-20 shadow-2xl">
       <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-item text-emerald-400 flex flex-col items-center py-1 transition active:scale-95">
         <span class="text-lg">🏢</span>
         <span class="text-[10px] font-bold mt-0.5">الحملة</span>
@@ -119,10 +119,35 @@
 
   </div>
 
+  <!-- Modal Dialog for Edit / Register (Vehicles & Drivers) -->
+  <div id="crudModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-3 select-none">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+          <span>✏️</span>
+          <span id="crudModalTitleText">تعديل وتصحيح البيانات</span>
+        </h3>
+        <button onclick="closeCrudModal()" class="text-slate-400 hover:text-white text-lg font-bold px-2 py-0.5 rounded-lg">&times;</button>
+      </div>
+      
+      <div id="crudModalBody" class="space-y-2.5 text-xs text-slate-300 max-h-[75vh] overflow-y-auto custom-scroll pr-1">
+        <!-- Dynamically injected -->
+      </div>
+    </div>
+  </div>
+
   <script>
     // State of the Fleet & Campaign
     const appState = {
       currentTab: 'dashboard',
+      session: {
+        isLoggedIn: false,
+        groupName: 'جروب حركة وسيارات الحملة المركزية',
+        adminPhone: '01092519210',
+        groupLink: '',
+        keepLoggedIn: true,
+        loginTime: null
+      },
       vehicles: [
         { 
           plate: '102 حكومي', 
@@ -219,6 +244,39 @@
 
     function render() {
       const body = document.getElementById('appBody');
+      const banner = document.getElementById('headerDynamicBanner');
+      const nav = document.getElementById('appBottomNav');
+
+      // 1. Check Login & Group Reading Gate (Landing Page if not logged in)
+      if (!appState.session.isLoggedIn) {
+        if (nav) nav.classList.add('hidden');
+        if (banner) {
+          banner.classList.add('hidden');
+          banner.innerHTML = '';
+        }
+        body.innerHTML = renderLoginAndGroupConnectScreen();
+        return;
+      }
+
+      // When Logged In
+      if (nav) nav.classList.remove('hidden');
+      if (banner) {
+        banner.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+              <div class="truncate">
+                <span class="text-[10px] text-slate-400">الجروب النشط:</span>
+                <span class="text-xs text-emerald-300 font-bold mr-1 truncate">${appState.session.groupName}</span>
+              </div>
+            </div>
+            <button onclick="confirmLogoutGroup()" class="text-[10px] bg-rose-950/90 hover:bg-rose-900 text-rose-300 border border-rose-800/80 px-2.5 py-1 rounded-lg font-bold flex-shrink-0 flex items-center gap-1 transition shadow active:scale-95" title="تسجيل الخروج لمتابعة جروب آخر">
+              <span>🚪</span>
+              <span>خروج لجروب آخر</span>
+            </button>
+          </div>
+        `;
+      }
 
       // --- 1. DASHBOARD TAB ---
       if (appState.currentTab === 'dashboard') {
@@ -226,6 +284,42 @@
         const inShop = appState.vehicles.filter(v => v.status === 'في الورشة').length;
 
         body.innerHTML = `
+          <!-- Active Connected Group Reading Status (First Primary Item) -->
+          <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/50 border border-emerald-500/50 p-3 rounded-2xl shadow-md space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 flex-shrink-0 text-base">
+                  📡
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>الجروب قيد القراءة والمتابعة الآن:</span>
+                  </div>
+                  <div class="text-xs font-black text-white truncate">${appState.session.groupName}</div>
+                </div>
+              </div>
+              <button onclick="confirmLogoutGroup()" class="bg-rose-950/90 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-700/60 text-[10.5px] font-bold px-2.5 py-1.5 rounded-xl transition active:scale-95 flex items-center gap-1 shadow flex-shrink-0" title="تسجيل الخروج لمتابعة جروب آخر">
+                <span>🚪</span>
+                <span>تسجيل الخروج</span>
+              </button>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] pt-1.5 border-t border-slate-800/80">
+              <div class="bg-slate-950/80 p-1.5 rounded-lg border border-slate-800">
+                <div class="text-slate-400">حالة الرصد</div>
+                <div class="text-emerald-400 font-bold">🟢 متصل ويقرأ</div>
+              </div>
+              <div class="bg-slate-950/80 p-1.5 rounded-lg border border-slate-800">
+                <div class="text-slate-400">مشرف الجروب</div>
+                <div class="text-white font-mono font-bold truncate">${appState.session.adminPhone || '01092519210'}</div>
+              </div>
+              <div class="bg-slate-950/80 p-1.5 rounded-lg border border-slate-800">
+                <div class="text-slate-400">تذكر الدخول</div>
+                <div class="text-amber-400 font-bold">${appState.session.keepLoggedIn ? 'مفعل دائماً' : 'جلسة مؤقتة'}</div>
+              </div>
+            </div>
+          </div>
+
           <!-- Quick Campaign Metrics -->
           <div class="grid grid-cols-2 gap-2">
             <div class="bg-slate-900 border border-slate-800/90 p-3 rounded-2xl shadow-sm text-center">
@@ -322,17 +416,26 @@
       else if (appState.currentTab === 'vehicles') {
         body.innerHTML = `
           <div class="space-y-3">
-            <div class="bg-slate-900 p-2.5 rounded-2xl border border-slate-800 flex items-center gap-2 text-xs">
-              <span class="text-slate-400 text-sm">🔍</span>
-              <input type="text" placeholder="ابحث برقم لوحة السيارة أو الموديل..." class="bg-transparent text-white focus:outline-none flex-1 placeholder:text-slate-500 text-xs">
+            <div class="flex items-center justify-between gap-2">
+              <div class="bg-slate-900 p-2.5 rounded-2xl border border-slate-800 flex items-center gap-2 text-xs flex-1">
+                <span class="text-slate-400 text-sm">🔍</span>
+                <input type="text" placeholder="ابحث برقم لوحة السيارة أو الموديل..." class="bg-transparent text-white focus:outline-none flex-1 placeholder:text-slate-500 text-xs">
+              </div>
+              <button onclick="openAddVehicleModal()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-3 py-2.5 rounded-2xl text-xs flex items-center gap-1.5 shadow transition active:scale-95 whitespace-nowrap">
+                <span>➕</span>
+                <span>تسجيل سيارة</span>
+              </button>
             </div>
 
-            <div class="text-[11px] text-slate-400">سجل مستقل لكل سيارة برقمها (أرشيف كامل للخروج والعودة والصيانة):</div>
+            <div class="text-[11px] text-slate-400">سجل مستقل لكل سيارة (اضغط على "تصحيح البيانات" لتعديل أي قراءة خاطئة للذكاء الاصطناعي):</div>
 
             ${appState.vehicles.map(v => `
-              <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl space-y-2.5">
+              <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl space-y-2.5 shadow-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 gap-2">
-                  <div class="font-extrabold text-sm text-emerald-400 whitespace-nowrap">🚗 مركبة: [ ${v.plate} ]</div>
+                  <div class="font-extrabold text-sm text-emerald-400 whitespace-nowrap flex items-center gap-1.5">
+                    <span>🚗</span>
+                    <span>مركبة: [ ${v.plate} ]</span>
+                  </div>
                   <span class="text-[10.5px] bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-md font-semibold whitespace-nowrap">${v.status}</span>
                 </div>
                 <div class="text-xs text-slate-200 font-medium">${v.model} • ${v.type}</div>
@@ -344,9 +447,13 @@
                   <div class="truncate">آخر غيار زيت: <strong class="text-amber-400 font-mono">${v.lastOilKm.toLocaleString()} كم</strong></div>
                 </div>
 
-                <div class="flex justify-end pt-1">
+                <div class="flex items-center justify-between gap-2 pt-1">
+                  <button onclick="openEditVehicleModal('${v.plate}')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-bold px-3 py-1.5 rounded-xl transition active:scale-95 shadow flex items-center gap-1 whitespace-nowrap">
+                    <span>✏️</span>
+                    <span>تصحيح البيانات</span>
+                  </button>
                   <button onclick="requestVehicleLedger('${v.plate}')" class="text-[11px] bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl transition active:scale-95 shadow whitespace-nowrap">
-                    استخراج كشف حساب بالواتساب
+                    كشف حساب واتساب
                   </button>
                 </div>
               </div>
@@ -441,19 +548,25 @@
       else if (appState.currentTab === 'hr') {
         body.innerHTML = `
           <div class="space-y-3">
-            <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex items-center justify-between">
-              <div>
-                <div class="text-[10.5px] text-slate-400 font-semibold">كشف حضور ومأموريات السائقين شهرياً</div>
-                <div class="text-xs font-bold text-white mt-0.5">شهر سبتمبر 2026 (مطابقة المستحقات)</div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="bg-slate-900 p-2.5 rounded-2xl border border-slate-800 flex items-center justify-between flex-1">
+                <div>
+                  <div class="text-[10.5px] text-slate-400 font-semibold">كشف حضور ومأموريات السائقين شهرياً</div>
+                  <div class="text-xs font-bold text-white mt-0.5">شهر سبتمبر 2026 (مطابقة المستحقات)</div>
+                </div>
+                <span class="text-[10px] bg-indigo-500/20 text-indigo-300 font-bold px-2 py-0.5 rounded-md border border-indigo-500/30 whitespace-nowrap">
+                  شؤون العاملين
+                </span>
               </div>
-              <span class="text-[10px] bg-indigo-500/20 text-indigo-300 font-bold px-2 py-0.5 rounded-md border border-indigo-500/30 whitespace-nowrap">
-                شؤون العاملين
-              </span>
+              <button onclick="openAddDriverModal()" class="bg-indigo-700 hover:bg-indigo-600 text-white font-bold px-3 py-2.5 rounded-2xl text-xs flex items-center gap-1.5 shadow transition active:scale-95 whitespace-nowrap">
+                <span>➕</span>
+                <span>تسجيل سائق</span>
+              </button>
             </div>
 
             <div class="space-y-2.5">
               ${appState.drivers.map(d => `
-                <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-2">
+                <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-2 shadow-sm">
                   <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
                     <div class="flex items-center gap-2 min-w-0">
                       <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 ${d.activeToday ? 'bg-emerald-500 shadow-sm shadow-emerald-500' : 'bg-slate-600'}"></span>
@@ -471,9 +584,13 @@
                     <div class="truncate">الهاتف: <strong class="text-white font-mono">${d.phone}</strong></div>
                   </div>
 
-                  <div class="flex justify-end pt-1">
-                    <button onclick="sendHRAttendance('${d.name}')" class="text-[10.5px] bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 px-2.5 py-1 rounded-xl whitespace-nowrap transition active:scale-95">
-                      إرسال كشف الحضور المعتمد لواتساب
+                  <div class="flex items-center justify-between gap-2 pt-1">
+                    <button onclick="openEditDriverModal('${d.name}')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 whitespace-nowrap transition active:scale-95 shadow">
+                      <span>✏️</span>
+                      <span>تعديل السائق</span>
+                    </button>
+                    <button onclick="sendHRAttendance('${d.name}')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 px-3 py-1.5 rounded-xl whitespace-nowrap transition active:scale-95">
+                      كشف الحضور واتساب
                     </button>
                   </div>
                 </div>
@@ -488,6 +605,27 @@
         body.innerHTML = `
           <div class="space-y-3.5">
             
+            <!-- Active Connected Group Details & Logout (First Item) -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm space-y-2.5">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="text-base">📱</span>
+                  <div class="min-w-0">
+                    <h3 class="font-bold text-xs text-white truncate">الجروب المتصل حالياً بالمنظومة</h3>
+                    <div class="text-[10.5px] text-emerald-400 font-bold truncate">${appState.session.groupName}</div>
+                  </div>
+                </div>
+                <button onclick="confirmLogoutGroup()" class="bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 text-[11px] font-bold px-3 py-1.5 rounded-xl transition active:scale-95 flex items-center gap-1 shadow whitespace-nowrap flex-shrink-0">
+                  <span>🚪</span>
+                  <span>تسجيل الخروج لمتابعة جروب آخر</span>
+                </button>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[10.5px] text-slate-400 bg-slate-950/70 p-2 rounded-xl border border-slate-800/60">
+                <div>هاتف المشرف: <strong class="text-white font-mono">${appState.session.adminPhone}</strong></div>
+                <div>حالة الجلسة: <strong class="text-amber-300">${appState.session.keepLoggedIn ? 'محفوظة بالجهاز' : 'مؤقتة'}</strong></div>
+              </div>
+            </div>
+
             <!-- 1. Privacy & Silent Mode Settings -->
             <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm">
               <div class="flex items-center justify-between mb-1.5">
@@ -703,19 +841,16 @@
               </div>
             </div>
 
-            <!-- 5. WhatsApp QR Connection -->
-            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl text-center shadow-sm">
-              <div class="text-xs font-bold text-white mb-1">ربط واتساب بمسح رمز QR</div>
-              <div class="text-[11px] text-slate-400 mb-2.5">حالة البوت: <span class="text-emerald-400 font-bold">🟢 متصل ومفعل</span></div>
-              <div class="bg-white p-2.5 rounded-xl w-32 h-32 mx-auto flex items-center justify-center border-2 border-emerald-500 shadow-md">
-                <div class="text-slate-900 text-xs font-mono font-bold text-center leading-tight">
-                  [ رمز QR<br>واتساب ]<br>
-                  <span class="text-[9px] text-slate-600">امسح للربط</span>
-                </div>
-              </div>
-              <div class="text-[10.5px] text-slate-400 mt-2.5">
-                لتفعيل أي جروب جديد، أضف الرقم واكتب بالجروب: <code class="text-emerald-400 font-bold">/تفعيل</code>
-              </div>
+            <!-- 5. Switch / Follow Another Group -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl text-center shadow-sm space-y-2">
+              <div class="text-xs font-bold text-white">متابعة وقراءة جروب واتساب آخر</div>
+              <p class="text-[10.5px] text-slate-400">
+                للتبديل إلى جروب حركة آخر أو إعادة مسح رمز QR جديد لربط مجموعة أخرى:
+              </p>
+              <button onclick="confirmLogoutGroup()" class="bg-indigo-950/90 hover:bg-indigo-900 text-indigo-300 hover:text-white border border-indigo-700/60 font-bold px-4 py-2 rounded-xl text-xs flex items-center justify-center gap-2 mx-auto transition active:scale-95 shadow">
+                <span>🔄</span>
+                <span>تسجيل الخروج والانتقال لجروب آخر</span>
+              </button>
             </div>
 
             <!-- 6. OFFICIAL AUTHOR SIGNATURE (Exclusive to Control Tab) -->
@@ -882,7 +1017,7 @@
     setInterval(syncFromCloud, 10000);
 
     function togglePrivacyNotice() {
-      alert("منظومة مراقب جروب الحملة:\n• مخصصة لقطاع النقل والخدمات الحكومية.\n• متصلة بالذكاء الاصطناعي متعدد الوسائط لتحليل أوراق الشغل وصور العدادات وبونات الوقود.\n• صُمم وطُوّر بواسطة: ABDOU ALI MOUSA");
+      alert("🏛️ منظومة «مراقب جروب الحملة» الذكية:\n\n💡 فكرة التطبيق:\n• تحويل جروب الواتساب إلى نظام إدارة أسطول مؤتمت 100% بالذكاء الاصطناعي.\n• قراءة صور عدادات السيارات وأذون الحركة وتحديث الكيلومترات لحظياً.\n• كشف هدر الوقود والتنبيه السري قبل موعد غيار الزيت.\n• حصر أيام ومأموريات السائقين شهرياً لمطابقة كشوف شؤون العاملين HR.\n• مراقبة إدارية صامتة وسرية تامة دون إزعاج السائقين بالجروب.\n\n🔐 خطوات تسجيل الدخول:\n1. أدخل اسم الجروب ورقم هاتف المدير للتنبيهات.\n2. افتح واتساب الهاتف > الأجهزة المرتبطة > ربط جهاز.\n3. امسح رمز الـ QR الظاهر أو اكتب بالجروب: /تفعيل.\n4. فعّل «الاحتفاظ بتسجيل الدخول» لتفتح المنظومة تلقائياً.\n\nصُمم وطُوّر بواسطة: ABDOU ALI MOUSA");
     }
 
     let deferredInstallPrompt = null;
@@ -908,6 +1043,682 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
       });
+    }
+
+    // --- GROUP SESSION & LOCAL STORAGE PERSISTENCE ---
+    function loadGroupSession() {
+      try {
+        const saved = localStorage.getItem('fleet_group_session');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.isLoggedIn) {
+            appState.session = Object.assign(appState.session, parsed);
+            return;
+          }
+        }
+        const temp = sessionStorage.getItem('fleet_group_session');
+        if (temp) {
+          const parsed = JSON.parse(temp);
+          if (parsed && parsed.isLoggedIn) {
+            appState.session = Object.assign(appState.session, parsed);
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+
+    function loadSavedFleetData() {
+      try {
+        loadGroupSession();
+        const savedVehicles = localStorage.getItem('fleet_vehicles_data');
+        if (savedVehicles) appState.vehicles = JSON.parse(savedVehicles);
+        const savedDrivers = localStorage.getItem('fleet_drivers_data');
+        if (savedDrivers) appState.drivers = JSON.parse(savedDrivers);
+      } catch (e) {}
+    }
+
+    function saveFleetDataLocally() {
+      try {
+        localStorage.setItem('fleet_vehicles_data', JSON.stringify(appState.vehicles));
+        localStorage.setItem('fleet_drivers_data', JSON.stringify(appState.drivers));
+      } catch (e) {}
+    }
+
+    function handleGroupLogin() {
+      const gNameInput = document.getElementById('loginGroupName');
+      const gPhoneInput = document.getElementById('loginAdminPhone');
+      const gLinkInput = document.getElementById('loginGroupLink');
+      const keepCheck = document.getElementById('loginKeepMe');
+
+      const groupName = (gNameInput ? gNameInput.value.trim() : '') || 'جروب حركة وسيارات الحملة المركزية';
+      const adminPhone = (gPhoneInput ? gPhoneInput.value.trim() : '') || '01092519210';
+      const groupLink = gLinkInput ? gLinkInput.value.trim() : '';
+      const keepLoggedIn = keepCheck ? keepCheck.checked : true;
+
+      appState.session.isLoggedIn = true;
+      appState.session.groupName = groupName;
+      appState.session.adminPhone = adminPhone;
+      appState.session.groupLink = groupLink;
+      appState.session.keepLoggedIn = keepLoggedIn;
+      appState.session.loginTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+      try {
+        if (keepLoggedIn) {
+          localStorage.setItem('fleet_group_session', JSON.stringify(appState.session));
+          sessionStorage.removeItem('fleet_group_session');
+        } else {
+          sessionStorage.setItem('fleet_group_session', JSON.stringify(appState.session));
+          localStorage.removeItem('fleet_group_session');
+        }
+      } catch (e) {}
+
+      render();
+      alert(`✅ تم تسجيل وقراءة [ ${groupName} ] بنجاح!\n\nتم تفعيل المراقبة الذكية لأذون الخروج والعودة وبونات الوقود وعدادات الأسطول.`);
+    }
+
+    function quickDemoLogin() {
+      appState.session.isLoggedIn = true;
+      appState.session.groupName = 'جروب حركة وسيارات الحملة المركزية';
+      appState.session.adminPhone = '01092519210';
+      appState.session.groupLink = '';
+      appState.session.keepLoggedIn = true;
+      appState.session.loginTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+      try {
+        localStorage.setItem('fleet_group_session', JSON.stringify(appState.session));
+      } catch (e) {}
+
+      render();
+    }
+
+    function confirmLogoutGroup() {
+      if (!confirm(`هل أنت متأكد من تسجيل الخروج من [ ${appState.session.groupName} ] لمتابعة وقراءة جروب آخر؟`)) {
+        return;
+      }
+      logoutGroup();
+    }
+
+    function logoutGroup() {
+      try {
+        localStorage.removeItem('fleet_group_session');
+        sessionStorage.removeItem('fleet_group_session');
+      } catch (e) {}
+      appState.session.isLoggedIn = false;
+      appState.currentTab = 'dashboard';
+      render();
+    }
+
+    function selectPredefinedGroup(name) {
+      const el = document.getElementById('loginGroupName');
+      if (el) el.value = name;
+    }
+
+    function renderLoginAndGroupConnectScreen() {
+      return `
+        <div class="space-y-3.5 py-1">
+          <!-- Government Official Login Badge -->
+          <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-emerald-500/40 p-4 rounded-3xl text-center shadow-lg relative overflow-hidden">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-900 p-0.5 shadow-xl flex items-center justify-center border border-emerald-400/60 mb-2.5">
+              <span class="text-2xl">🛡️</span>
+            </div>
+            <h2 class="text-base font-black text-white">بوابة تسجيل الدخول وقراءة الجروب</h2>
+            <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+              المنظومة الذكية المعتمدة لقراءة جروبات الواتساب ورصد حركة أسطول الحملة الحكومية
+            </p>
+            <div class="mt-2.5 inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[10.5px] px-3 py-1 rounded-full font-bold">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>ربط ومراقبة الجروب بالذكاء الاصطناعي 24/7</span>
+            </div>
+          </div>
+
+          <!-- Application Core Concept & Value Proposition (شرح فكرة التطبيق) -->
+          <div class="bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 border border-emerald-500/40 p-4 rounded-3xl shadow-md space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">💡</span>
+                <div>
+                  <h3 class="font-black text-xs text-white">فكرة المنظومة الذكية لمراقب الحملة</h3>
+                  <div class="text-[10px] text-emerald-400 font-semibold">تحويل شات جروب الواتساب إلى نظام إدارة أسطول مؤتمت 100%</div>
+                </div>
+              </div>
+              <span class="text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold whitespace-nowrap">بدون إدخال يدوي</span>
+            </div>
+
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              يقوم النظام بربط جروب الواتساب الذي يتواصل فيه السائقون ومشرفو الحركة، وتفعيل ذكاء اصطناعي فائق (Multimodal AI) يراقب الشات في صمت تام، ويستخرج البيانات من الصور والمحادثات تلقائياً:
+            </p>
+
+            <!-- 4 Visual Benefit Pillars -->
+            <div class="grid grid-cols-2 gap-2 text-[10.5px]">
+              <div class="bg-slate-950/80 border border-slate-800/80 p-2.5 rounded-2xl space-y-1">
+                <div class="flex items-center gap-1.5 font-bold text-white">
+                  <span class="text-sm">🚗</span>
+                  <span>رصد العدادات والحركة</span>
+                </div>
+                <div class="text-[10px] text-slate-400 leading-snug">
+                  قراءة صور طبلون السيارات وأذون الخروج والعودة وحساب المسافات وتحديث سجل الحركة لحظياً.
+                </div>
+              </div>
+
+              <div class="bg-slate-950/80 border border-slate-800/80 p-2.5 rounded-2xl space-y-1">
+                <div class="flex items-center gap-1.5 font-bold text-white">
+                  <span class="text-sm">⛽</span>
+                  <span>حماية الوقود والزيوت</span>
+                </div>
+                <div class="text-[10px] text-slate-400 leading-snug">
+                  مطابقة فواتير الوقود مع الكيلومترات لكشف أي هدر أو تسريب، والتنبيه التلقائي قبل موعد غيار الزيت.
+                </div>
+              </div>
+
+              <div class="bg-slate-950/80 border border-slate-800/80 p-2.5 rounded-2xl space-y-1">
+                <div class="flex items-center gap-1.5 font-bold text-white">
+                  <span class="text-sm">👔</span>
+                  <span>شؤون حضور السائقين</span>
+                </div>
+                <div class="text-[10px] text-slate-400 leading-snug">
+                  توثيق أيام عمل ومأموريات كل سائق بدقة لاعتماد كشوف ومستحقات الموارد البشرية (HR).
+                </div>
+              </div>
+
+              <div class="bg-slate-950/80 border border-slate-800/80 p-2.5 rounded-2xl space-y-1">
+                <div class="flex items-center gap-1.5 font-bold text-white">
+                  <span class="text-sm">🤫</span>
+                  <span>مراقبة إدارية صامتة</span>
+                </div>
+                <div class="text-[10px] text-slate-400 leading-snug">
+                  يعمل البوت بهدوء تام دون إزعاج السائقين، ويرسل تنبيهات الطوارئ والتقارير لواتساب المدير فقط.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step-by-Step Login Guide (شرح عملية تسجيل الدخول) -->
+          <div class="bg-gradient-to-b from-slate-900/90 to-slate-950 border border-sky-500/35 p-3.5 rounded-3xl shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-base">📖</span>
+                <div>
+                  <h3 class="font-bold text-xs text-white">دليل خطوات تسجيل الدخول وربط الجروب</h3>
+                  <div class="text-[10px] text-sky-400 font-semibold">3 خطوات بسيطة لبدء مراقبة الحملة مباشرة</div>
+                </div>
+              </div>
+              <span class="text-[10px] bg-sky-950 text-sky-300 border border-sky-500/40 px-2 py-0.5 rounded-full font-bold whitespace-nowrap">إرشادات الربط</span>
+            </div>
+
+            <!-- Steps timeline / cards -->
+            <div class="space-y-2 text-xs">
+              <div class="flex items-start gap-2.5 bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800/70">
+                <div class="w-6 h-6 rounded-xl bg-sky-500/20 text-sky-300 font-black text-xs flex items-center justify-center flex-shrink-0 border border-sky-500/40 mt-0.5">
+                  1
+                </div>
+                <div>
+                  <div class="font-bold text-white text-[11px]">فتح «الأجهزة المرتبطة» في واتساب الهاتف</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">من هاتفك المحمول، افتح تطبيق WhatsApp واضغط على القائمة (الثلاث نقاط ⋮ بأعلى الشاشة) ثم اختر «الأجهزة المرتبطة».</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-2.5 bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800/70">
+                <div class="w-6 h-6 rounded-xl bg-sky-500/20 text-sky-300 font-black text-xs flex items-center justify-center flex-shrink-0 border border-sky-500/40 mt-0.5">
+                  2
+                </div>
+                <div>
+                  <div class="font-bold text-white text-[11px]">مسح رمز QR أو كتابة أمر التفعيل بالجروب</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">اضغط على «ربط جهاز» ووجّه كاميرا الهاتف نحو رمز الـ QR الظاهر بالأسفل، أو أضف رقم المنظومة بالجروب واكتب <code class="text-emerald-400 font-bold bg-slate-900 px-1 rounded">/تفعيل</code>.</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-2.5 bg-slate-950/70 p-2.5 rounded-2xl border border-slate-800/70">
+                <div class="w-6 h-6 rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-xs flex items-center justify-center flex-shrink-0 border border-emerald-500/40 mt-0.5">
+                  3
+                </div>
+                <div>
+                  <div class="font-bold text-white text-[11px]">الاحتفاظ بتسجيل الدخول وبدء المتابعة</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">اترك خيار «الاحتفاظ بتسجيل الدخول» مفعلاً ليفتح معك الموقع تلقائياً في كل مرة دون الحاجة لتكرار المسح، ثم اضغط زر «تسجيل وقراءة الجروب».</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pro Tip Alert -->
+            <div class="bg-amber-950/30 border border-amber-500/30 p-2.5 rounded-2xl flex items-center gap-2 text-[10.5px] text-amber-300">
+              <span class="text-base flex-shrink-0">💡</span>
+              <div class="leading-relaxed">
+                <strong>ملاحظة للمدير:</strong> يمكنك في أي وقت بعد الدخول الضغط على زر <strong>«تسجيل الخروج»</strong> من الشريط العلوي لمتابعة جروب حركة آخر بكل مرونة.
+              </div>
+            </div>
+          </div>
+
+          <!-- QR Scan & Cloud Reading Method -->
+          <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-3xl shadow-sm space-y-2.5 text-center">
+            <div class="flex items-center justify-between text-right">
+              <div>
+                <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>📷</span>
+                  <span>مسح رمز QR أو الربط السحابي</span>
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">افتح واتساب > الأجهزة المرتبطة > امسح الرمز أو ادخل مباشرة</div>
+              </div>
+              <span class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">🟢 متزامن 24/7</span>
+            </div>
+
+            <!-- WhatsApp Web QR Code Visual -->
+            <div class="relative bg-white p-3 rounded-2xl w-36 h-36 mx-auto flex items-center justify-center border-2 border-emerald-500 shadow-xl mt-2 group">
+              <svg class="w-full h-full text-slate-900" viewBox="0 0 100 100" fill="currentColor">
+                <rect x="5" y="5" width="26" height="26" rx="4" fill="none" stroke="#064e3b" stroke-width="4"/>
+                <rect x="11" y="11" width="14" height="14" rx="2" fill="#047857"/>
+                <rect x="69" y="5" width="26" height="26" rx="4" fill="none" stroke="#064e3b" stroke-width="4"/>
+                <rect x="75" y="11" width="14" height="14" rx="2" fill="#047857"/>
+                <rect x="5" y="69" width="26" height="26" rx="4" fill="none" stroke="#064e3b" stroke-width="4"/>
+                <rect x="11" y="75" width="14" height="14" rx="2" fill="#047857"/>
+                <rect x="36" y="8" width="6" height="6" rx="1" fill="#0f172a"/>
+                <rect x="46" y="8" width="8" height="6" rx="1" fill="#0f172a"/>
+                <rect x="58" y="8" width="5" height="6" rx="1" fill="#0f172a"/>
+                <rect x="36" y="18" width="8" height="8" rx="1" fill="#0f172a"/>
+                <rect x="48" y="20" width="6" height="6" rx="1" fill="#0f172a"/>
+                <rect x="58" y="18" width="6" height="8" rx="1" fill="#0f172a"/>
+                <rect x="38" y="38" width="24" height="24" rx="6" fill="#10b981"/>
+                <circle cx="50" cy="50" r="7" fill="#ffffff"/>
+                <rect x="36" y="68" width="6" height="8" rx="1" fill="#0f172a"/>
+                <rect x="46" y="72" width="8" height="6" rx="1" fill="#0f172a"/>
+                <rect x="58" y="68" width="6" height="6" rx="1" fill="#0f172a"/>
+                <rect x="70" y="38" width="8" height="6" rx="1" fill="#0f172a"/>
+                <rect x="82" y="48" width="6" height="8" rx="1" fill="#0f172a"/>
+                <rect x="70" y="60" width="8" height="8" rx="1" fill="#0f172a"/>
+                <rect x="82" y="72" width="6" height="8" rx="1" fill="#0f172a"/>
+                <rect x="70" y="84" width="8" height="6" rx="1" fill="#0f172a"/>
+                <rect x="8" y="38" width="8" height="6" rx="1" fill="#0f172a"/>
+                <rect x="20" y="48" width="6" height="8" rx="1" fill="#0f172a"/>
+                <rect x="8" y="58" width="8" height="6" rx="1" fill="#0f172a"/>
+                <rect x="36" y="84" width="18" height="6" rx="1" fill="#0f172a"/>
+              </svg>
+              <div class="absolute inset-x-2 h-0.5 bg-emerald-500 shadow-[0_0_8px_#10b981] animate-bounce pointer-events-none opacity-80"></div>
+            </div>
+
+            <div class="text-[10.5px] text-slate-400">
+              كود تفعيل البوت المباشر في الجروب: <code class="text-emerald-400 font-bold bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">/تفعيل</code>
+            </div>
+          </div>
+
+          <!-- Remember Login Checkbox (Requested by User) -->
+          <div class="bg-gradient-to-r from-slate-900 to-slate-900/90 border border-emerald-500/40 p-3 rounded-2xl flex items-center justify-between gap-2 shadow-sm">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 flex-shrink-0 text-base">
+                🔐
+              </div>
+              <div class="min-w-0">
+                <label for="loginKeepMe" class="text-xs font-bold text-white cursor-pointer block">الاحتفاظ بتسجيل الدخول</label>
+                <p class="text-[10px] text-slate-400">تذكر هذا الجروب وتخطي هذه الواجهة تلقائياً في كل مرة تفتح فيها الموقع</p>
+              </div>
+            </div>
+            <input type="checkbox" id="loginKeepMe" ${appState.session.keepLoggedIn ? 'checked' : ''} class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
+          </div>
+
+          <!-- Login & Connect Action Buttons -->
+          <div class="space-y-2 pt-1">
+            <button onclick="handleGroupLogin()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950 transition active:scale-[0.98]">
+              <span class="text-base">🚀</span>
+              <span>تسجيل وقراءة الجروب وبدء المتابعة</span>
+            </button>
+
+            <button onclick="quickDemoLogin()" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition active:scale-[0.98]">
+              <span>⚡</span>
+              <span>دخول سريع (جروب الحملة النموذجي)</span>
+            </button>
+          </div>
+
+          <!-- Developer Signature -->
+          <div class="pt-4 pb-2 border-t border-slate-800/80 text-center space-y-1">
+            <div class="text-[10.5px] text-slate-400 font-medium">صُمم وطُوّر بواسطة</div>
+            <div class="text-sm font-black text-amber-400 tracking-wider">ABDOU ALI MOUSA</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Load saved custom data on startup
+    loadSavedFleetData();
+
+    function closeCrudModal() {
+      const modal = document.getElementById('crudModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // 1. EDIT / CORRECT VEHICLE
+    function openEditVehicleModal(plate) {
+      const v = appState.vehicles.find(x => x.plate === plate);
+      if (!v) return;
+
+      document.getElementById('crudModalTitleText').textContent = `تصحيح بيانات سيارة [ ${v.plate} ]`;
+      document.getElementById('crudModalBody').innerHTML = `
+        <div class="text-[11px] text-amber-300 bg-amber-950/40 border border-amber-500/30 p-2 rounded-xl">
+          💡 يمكنك هنا تصحيح أي قراءة خاطئة للذكاء الاصطناعي لرقم اللوحة أو العداد أو الموديل.
+        </div>
+
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300">رقم لوحة السيارة:</label>
+          <input type="text" id="mPlate" value="${v.plate}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-xs focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">العداد الحالي (كم):</label>
+            <input type="number" id="mKm" value="${v.km}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">آخر غيار زيت (كم):</label>
+            <input type="number" id="mLastOil" value="${v.lastOilKm}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">موديل السيارة:</label>
+            <input type="text" id="mModel" value="${v.model}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">نوع / تصنيف السيارة:</label>
+            <input type="text" id="mType" value="${v.type}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">السائق المعين:</label>
+            <input type="text" id="mDriver" value="${v.driver}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">حالة المركبة:</label>
+            <select id="mStatus" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+              <option value="في مأمورية" ${v.status === 'في مأمورية' ? 'selected' : ''}>في مأمورية</option>
+              <option value="بمقر الحملة" ${v.status === 'بمقر الحملة' ? 'selected' : ''}>بمقر الحملة</option>
+              <option value="في الورشة" ${v.status === 'في الورشة' ? 'selected' : ''}>في الورشة</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-800 gap-2">
+          <button onclick="saveVehicleCorrection('${v.plate}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-xs flex-1 transition active:scale-95 shadow">
+            💾 حفظ وتصحيح البيانات
+          </button>
+          <button onclick="deleteVehicleItem('${v.plate}')" class="bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/60 font-bold py-2 px-3 rounded-xl text-xs transition active:scale-95">
+            🗑️ حذف
+          </button>
+        </div>
+      `;
+
+      document.getElementById('crudModal').classList.remove('hidden');
+    }
+
+    // 2. ADD NEW VEHICLE
+    function openAddVehicleModal() {
+      document.getElementById('crudModalTitleText').textContent = '➕ تسجيل سيارة جديدة بالأسطول';
+      document.getElementById('crudModalBody').innerHTML = `
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300">رقم لوحة السيارة:</label>
+          <input type="text" id="mPlate" placeholder="مثال: 105 حكومي أو 8392 ف ل" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-xs focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">العداد الحالي (كم):</label>
+            <input type="number" id="mKm" placeholder="50000" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">آخر غيار زيت (كم):</label>
+            <input type="number" id="mLastOil" placeholder="48000" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">موديل السيارة:</label>
+            <input type="text" id="mModel" placeholder="مثال: تويوتا هايس" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">نوع / تصنيف السيارة:</label>
+            <input type="text" id="mType" placeholder="ميكروباص خدمة / نقل" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">السائق المعين:</label>
+            <input type="text" id="mDriver" placeholder="اسم السائق" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">حالة المركبة:</label>
+            <select id="mStatus" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+              <option value="بمقر الحملة">بمقر الحملة</option>
+              <option value="في مأمورية">في مأمورية</option>
+              <option value="في الورشة">في الورشة</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800">
+          <button onclick="saveNewVehicle()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition active:scale-95 shadow">
+            ➕ تسجيل السيارة في المنظومة
+          </button>
+        </div>
+      `;
+
+      document.getElementById('crudModal').classList.remove('hidden');
+    }
+
+    // 3. EDIT DRIVER
+    function openEditDriverModal(name) {
+      const d = appState.drivers.find(x => x.name === name);
+      if (!d) return;
+
+      document.getElementById('crudModalTitleText').textContent = `تعديل بيانات السائق [ ${d.name} ]`;
+      document.getElementById('crudModalBody').innerHTML = `
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300">اسم السائق الثلاثي / الرباعي:</label>
+          <input type="text" id="mDriverName" value="${d.name}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">رقم الهاتف (WhatsApp):</label>
+            <input type="text" id="mDriverPhone" value="${d.phone}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-indigo-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">المركبة المسندة في عهدته:</label>
+            <input type="text" id="mDriverCar" value="${d.car}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">أيام العمل الفعلية هذا الشهر:</label>
+            <input type="number" id="mDriverDays" value="${d.days}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-indigo-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">إجمالي كم المقطوعة:</label>
+            <input type="number" id="mDriverTotalKm" value="${d.totalKm}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-800 gap-2">
+          <button onclick="saveDriverCorrection('${d.name}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl text-xs flex-1 transition active:scale-95 shadow">
+            💾 حفظ وتعديل بيانات السائق
+          </button>
+          <button onclick="deleteDriverItem('${d.name}')" class="bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/60 font-bold py-2 px-3 rounded-xl text-xs transition active:scale-95">
+            🗑️ حذف
+          </button>
+        </div>
+      `;
+
+      document.getElementById('crudModal').classList.remove('hidden');
+    }
+
+    // 4. ADD DRIVER
+    function openAddDriverModal() {
+      document.getElementById('crudModalTitleText').textContent = '➕ تسجيل سائق جديد';
+      document.getElementById('crudModalBody').innerHTML = `
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300">اسم السائق الثلاثي / الرباعي:</label>
+          <input type="text" id="mDriverName" placeholder="الاسم بالكامل" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">رقم هاتف السائق:</label>
+            <input type="text" id="mDriverPhone" placeholder="01012345678" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-indigo-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">السيارة المسندة (اللوحة):</label>
+            <input type="text" id="mDriverCar" placeholder="مثال: 102 حكومي" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">أيام العمل المبدئية للشهر:</label>
+            <input type="number" id="mDriverDays" value="0" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-indigo-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">إجمالي الكيلومترات:</label>
+            <input type="number" id="mDriverTotalKm" value="0" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800">
+          <button onclick="saveNewDriver()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition active:scale-95 shadow">
+            ➕ تسجيل السائق في المنظومة
+          </button>
+        </div>
+      `;
+
+      document.getElementById('crudModal').classList.remove('hidden');
+    }
+
+    function saveVehicleCorrection(origPlate) {
+      const v = appState.vehicles.find(x => x.plate === origPlate);
+      if (!v) return;
+      const newPlate = document.getElementById('mPlate').value.trim();
+      const newKm = parseInt(document.getElementById('mKm').value, 10) || 0;
+      const newLastOil = parseInt(document.getElementById('mLastOil').value, 10) || 0;
+      const newModel = document.getElementById('mModel').value.trim();
+      const newType = document.getElementById('mType').value.trim();
+      const newDriver = document.getElementById('mDriver').value.trim();
+      const newStatus = document.getElementById('mStatus').value;
+
+      if (!newPlate) {
+        alert('يرجى كتابة رقم لوحة السيارة');
+        return;
+      }
+
+      v.plate = newPlate;
+      v.km = newKm;
+      v.lastOilKm = newLastOil;
+      v.model = newModel;
+      v.type = newType;
+      v.driver = newDriver;
+      v.status = newStatus;
+
+      saveFleetDataLocally();
+      closeCrudModal();
+      render();
+      alert(`✅ تم حفظ وتصحيح بيانات المركبة [ ${newPlate} ] بنجاح.`);
+    }
+
+    function saveNewVehicle() {
+      const plate = document.getElementById('mPlate').value.trim();
+      if (!plate) {
+        alert('يرجى إدخال رقم اللوحة');
+        return;
+      }
+      const km = parseInt(document.getElementById('mKm').value, 10) || 0;
+      const lastOil = parseInt(document.getElementById('mLastOil').value, 10) || km;
+      const model = document.getElementById('mModel').value.trim() || 'سيارة حملة';
+      const type = document.getElementById('mType').value.trim() || 'خدمة';
+      const driver = document.getElementById('mDriver').value.trim() || 'غير محدد';
+      const status = document.getElementById('mStatus').value;
+
+      appState.vehicles.unshift({
+        plate,
+        km,
+        lastOilKm: lastOil,
+        model,
+        type,
+        driver,
+        status,
+        oilInterval: 5000,
+        fuelRate: 10.4
+      });
+
+      saveFleetDataLocally();
+      closeCrudModal();
+      render();
+      alert(`✅ تم تسجيل المركبة الجديدة [ ${plate} ] بالأسطول بنجاح.`);
+    }
+
+    function deleteVehicleItem(plate) {
+      if (!confirm(`هل أنت متأكد من حذف المركبة [ ${plate} ] من المنظومة؟`)) return;
+      appState.vehicles = appState.vehicles.filter(x => x.plate !== plate);
+      saveFleetDataLocally();
+      closeCrudModal();
+      render();
+    }
+
+    function saveDriverCorrection(origName) {
+      const d = appState.drivers.find(x => x.name === origName);
+      if (!d) return;
+      const newName = document.getElementById('mDriverName').value.trim();
+      const newPhone = document.getElementById('mDriverPhone').value.trim();
+      const newCar = document.getElementById('mDriverCar').value.trim();
+      const newDays = parseInt(document.getElementById('mDriverDays').value, 10) || 0;
+      const newTotalKm = parseInt(document.getElementById('mDriverTotalKm').value, 10) || 0;
+
+      if (!newName) {
+        alert('يرجى كتابة اسم السائق');
+        return;
+      }
+
+      d.name = newName;
+      d.phone = newPhone;
+      d.car = newCar;
+      d.days = newDays;
+      d.totalKm = newTotalKm;
+
+      saveFleetDataLocally();
+      closeCrudModal();
+      render();
+      alert(`✅ تم حفظ وتعديل بيانات السائق [ ${newName} ] بنجاح.`);
+    }
+
+    function saveNewDriver() {
+      const name = document.getElementById('mDriverName').value.trim();
+      if (!name) {
+        alert('يرجى إدخال اسم السائق');
+        return;
+      }
+      const phone = document.getElementById('mDriverPhone').value.trim() || '01000000000';
+      const car = document.getElementById('mDriverCar').value.trim() || 'غير محدد';
+      const days = parseInt(document.getElementById('mDriverDays').value, 10) || 0;
+      const totalKm = parseInt(document.getElementById('mDriverTotalKm').value, 10) || 0;
+
+      appState.drivers.unshift({
+        name,
+        phone,
+        car,
+        days,
+        totalKm,
+        activeToday: false
+      });
+
+      saveFleetDataLocally();
+      closeCrudModal();
+      render();
+      alert(`✅ تم تسجيل السائق الجديد [ ${name} ] بنجاح.`);
+    }
+
+    function deleteDriverItem(name) {
+      if (!confirm(`هل أنت متأكد من حذف السائق [ ${name} ] من المنظومة؟`)) return;
+      appState.drivers = appState.drivers.filter(x => x.name !== name);
+      saveFleetDataLocally();
+      closeCrudModal();
+      render();
     }
 
     // Initial load
