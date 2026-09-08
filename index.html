@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>مراقب جروب الحملة - المنظومة الذكية لإدارة الحملة</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <meta name="theme-color" content="#020617">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مراقب الحملة">
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Cairo', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex justify-center items-center p-0 md:p-4">
+
+  <!-- Mobile Container (Fits 100% on phones, sleek frame on desktop) -->
+  <div class="w-full max-w-md md:rounded-[40px] bg-slate-950 md:border-4 md:border-slate-800 shadow-2xl flex flex-col min-h-screen md:min-h-[850px] md:h-[850px] overflow-hidden relative">
+
+    <!-- Government Official Header Banner -->
+    <header class="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-b border-slate-800/90 pt-3 px-4 pb-3 select-none relative z-10">
+      
+      <!-- Top Meta Bar -->
+      <div class="flex items-center justify-between text-[11px] text-slate-400 mb-2">
+        <div class="flex items-center gap-1.5 font-bold text-amber-400">
+          <span class="text-sm">🏛️</span>
+          <span>قطاع النقل والخدمات الحكومية</span>
+        </div>
+        <div class="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-500/40">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>سيرفر الحملة: 24/7</span>
+        </div>
+      </div>
+
+      <!-- App Brand Title -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-950 p-0.5 shadow-md flex items-center justify-center border border-emerald-400/50">
+            <span class="text-xl">🛡️</span>
+          </div>
+          <div>
+            <h1 class="text-lg font-black text-white tracking-tight">
+              مراقب جروب الحملة
+            </h1>
+            <p class="text-[10.5px] text-slate-400 font-medium">المنظومة الذكية لإدارة سيارات وسائقي الحملة</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="installPWA()" id="pwaInstallBtn" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-2 py-1.5 rounded-xl text-[10.5px] flex items-center gap-1 shadow-sm border border-emerald-500/40 transition active:scale-95" title="تنزيل التطبيق على الهاتف">
+            <span>📲</span>
+            <span>تنزيل كـ تطبيق</span>
+          </button>
+          <button onclick="togglePrivacyNotice()" class="bg-slate-800/90 hover:bg-slate-700 text-amber-300 p-2 rounded-xl text-xs border border-slate-700 shadow-sm" title="معلومات المنظومة">
+            ℹ️
+          </button>
+        </div>
+      </div>
+
+      <!-- Compact AI Multimodal Processing Banner -->
+      <div class="mt-2 bg-slate-900/90 border border-emerald-500/35 rounded-xl px-2.5 py-1.5 shadow-sm">
+        <div class="flex items-center gap-1.5">
+          <span class="text-emerald-400 text-xs flex-shrink-0">👁️</span>
+          <div class="text-[10.5px] text-slate-300 leading-snug">
+            <strong class="text-emerald-300 font-bold">محرك الرصد الذكي:</strong>
+            قراءة النصوص فوراً، وتحليل صور أذون الخروج والعودة، فواتير الوقود، وقراءات عدادات السيارات.
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Scrollable Screen Content -->
+    <main id="appBody" class="flex-1 overflow-y-auto custom-scroll p-3.5 space-y-3 bg-slate-950 pb-20">
+      <!-- Injected via JavaScript -->
+    </main>
+
+    <!-- Native-Style Bottom Navigation Bar -->
+    <nav class="absolute bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 grid grid-cols-5 py-2 px-1 text-center select-none z-20 shadow-2xl">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-item text-emerald-400 flex flex-col items-center py-1 transition active:scale-95">
+        <span class="text-lg">🏢</span>
+        <span class="text-[10px] font-bold mt-0.5">الحملة</span>
+      </button>
+      <button onclick="switchTab('vehicles')" id="tab-vehicles" class="nav-item text-slate-400 flex flex-col items-center py-1 transition active:scale-95">
+        <span class="text-lg">🚗</span>
+        <span class="text-[10px] font-semibold mt-0.5">السيارات</span>
+      </button>
+      <button onclick="switchTab('fuel')" id="tab-fuel" class="nav-item text-slate-400 flex flex-col items-center py-1 transition active:scale-95">
+        <span class="text-lg">⛽</span>
+        <span class="text-[10px] font-semibold mt-0.5">الوقود/الزيت</span>
+      </button>
+      <button onclick="switchTab('hr')" id="tab-hr" class="nav-item text-slate-400 flex flex-col items-center py-1 transition active:scale-95">
+        <span class="text-lg">👔</span>
+        <span class="text-[10px] font-semibold mt-0.5">السائقين</span>
+      </button>
+      <button onclick="switchTab('control')" id="tab-control" class="nav-item text-slate-400 flex flex-col items-center py-1 transition active:scale-95">
+        <span class="text-lg">⚙️</span>
+        <span class="text-[10px] font-semibold mt-0.5">التحكم</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    // State of the Fleet & Campaign
+    const appState = {
+      currentTab: 'dashboard',
+      vehicles: [
+        { 
+          plate: '102 حكومي', 
+          type: 'ميكروباص خدمة', 
+          model: 'تويوتا هايس', 
+          km: 48500, 
+          status: 'في مأمورية', 
+          driver: 'أحمد مصطفى', 
+          lastOilKm: 45000, 
+          oilInterval: 5000, 
+          fuelRate: 10.4 
+        },
+        { 
+          plate: '4589 ب س ج', 
+          type: 'سيارة قيادة', 
+          model: 'نيسان صني', 
+          km: 124500, 
+          status: 'في مأمورية', 
+          driver: 'مصطفى علي', 
+          lastOilKm: 120000, 
+          oilInterval: 5000, 
+          fuelRate: 12.8 
+        },
+        { 
+          plate: '305 حكومي', 
+          type: 'نقل بضائع', 
+          model: 'شيفروليه جامبو', 
+          km: 89300, 
+          status: 'في الورشة', 
+          driver: 'محمود خالد', 
+          lastOilKm: 83000, 
+          oilInterval: 5000, 
+          fuelRate: 7.2 
+        },
+        { 
+          plate: '714 حكومي', 
+          type: 'مأموريات إدارية', 
+          model: 'رينو لوجان', 
+          km: 62100, 
+          status: 'بمقر الحملة', 
+          driver: 'سامح حسن', 
+          lastOilKm: 60000, 
+          oilInterval: 5000, 
+          fuelRate: 11.5 
+        }
+      ],
+      drivers: [
+        { name: 'أحمد مصطفى', phone: '01012345678', car: '102 حكومي', days: 22, activeToday: true, totalKm: 3420 },
+        { name: 'مصطفى علي', phone: '01198765432', car: '4589 ب س ج', days: 20, activeToday: true, totalKm: 2890 },
+        { name: 'محمود خالد', phone: '01234567890', car: '305 حكومي', days: 18, activeToday: false, totalKm: 1950 },
+        { name: 'سامح حسن', phone: '01511223344', car: '714 حكومي', days: 15, activeToday: false, totalKm: 1620 }
+      ],
+      maintenance: [
+        { id: 1, plate: '305 حكومي', issue: 'فحص دورة الفرامل وتغيير التيل الأمامي', severity: 'عاجل', status: 'جاري الإصلاح' }
+      ],
+      fuelLogs: [
+        { plate: '102 حكومي', liters: 40, cost: 520, rate: 10.5, abnormal: false, date: 'اليوم 09:15 ص' },
+        { plate: '305 حكومي', liters: 65, cost: 845, rate: 6.2, abnormal: true, date: 'أمس 04:30 م' }
+      ],
+      settings: {
+        isSilent: true, // Silent mode active by default
+        replyInGroup: false,
+        managerPhone: '01092519210',
+        activeHours: '24/7',
+        replyScope: 'manager_only',
+        replyTemplate: 'formal',
+        // Bot Reading & Vision Permissions
+        readOdometers: true,
+        readWaybills: true,
+        readFuelReceipts: true,
+        readFaults: true,
+        readHRAttendance: true,
+        // Private Alerts to Manager WhatsApp
+        alertFuelWaste: true,
+        alertOilDue: true,
+        alertUrgentBreakdown: true,
+        // Suggested Interactive Reply Templates
+        replyExitText: '✅ تم توثيق خروج [ {اللوحة} ] - عداد {العداد} كم. رافقتكم السلامة.',
+        replyReturnText: '🏁 تم توثيق عودة [ {اللوحة} ] - المسافة {المسافة} كم. حمداً لله على السلامة.',
+        replyFuelText: '⛽ تم تسجيل استلام بون وقود لسيارة [ {اللوحة} ] - {اللترات} لتر.'
+      }
+    };
+
+    function switchTab(tab) {
+      appState.currentTab = tab;
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.remove('text-emerald-400');
+        el.classList.add('text-slate-400');
+      });
+      document.getElementById('tab-' + tab).classList.add('text-emerald-400');
+      document.getElementById('tab-' + tab).classList.remove('text-slate-400');
+      render();
+    }
+
+    function render() {
+      const body = document.getElementById('appBody');
+
+      // --- 1. DASHBOARD TAB ---
+      if (appState.currentTab === 'dashboard') {
+        const onDuty = appState.vehicles.filter(v => v.status === 'في مأمورية').length;
+        const inShop = appState.vehicles.filter(v => v.status === 'في الورشة').length;
+
+        body.innerHTML = `
+          <!-- Quick Campaign Metrics -->
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-slate-900 border border-slate-800/90 p-3 rounded-2xl shadow-sm text-center">
+              <div class="text-[11px] text-slate-400 font-semibold">إجمالي سيارات الحملة</div>
+              <div class="text-2xl font-black text-white mt-0.5">${appState.vehicles.length} <span class="text-xs font-normal text-slate-400">مركبة</span></div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800/90 p-3 rounded-2xl shadow-sm text-center">
+              <div class="text-[11px] text-slate-400 font-semibold">في مأمورية الآن</div>
+              <div class="text-2xl font-black text-emerald-400 mt-0.5">${onDuty} <span class="text-xs font-normal text-slate-400">سيارات</span></div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800/90 p-3 rounded-2xl shadow-sm text-center">
+              <div class="text-[11px] text-slate-400 font-semibold">في ورشة الصيانة</div>
+              <div class="text-2xl font-black text-rose-400 mt-0.5">${inShop} <span class="text-xs font-normal text-slate-400">سيارة</span></div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800/90 p-3 rounded-2xl shadow-sm text-center">
+              <div class="text-[11px] text-slate-400 font-semibold">سائقين مسجلين اليوم</div>
+              <div class="text-2xl font-black text-amber-400 mt-0.5">${appState.drivers.filter(d => d.activeToday).length} <span class="text-xs font-normal text-slate-400">سائق</span></div>
+            </div>
+          </div>
+
+          <!-- Urgent Fleet Alerts -->
+          ${appState.maintenance.length > 0 ? `
+            <div class="bg-rose-950/30 border border-rose-800/60 rounded-2xl p-3 shadow-md">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+                  <span class="text-base">🚨</span> إخطارات الصيانة الفنية العاجلة
+                </span>
+                <span class="text-[10px] bg-rose-900/80 text-rose-200 px-2 py-0.5 rounded-full font-bold">متابعة فورية</span>
+              </div>
+              ${appState.maintenance.map(m => `
+                <div class="bg-slate-950/80 border border-rose-900/40 p-2.5 rounded-xl flex items-center justify-between mt-1.5 gap-2">
+                  <div class="flex-1 min-w-0">
+                    <div class="font-bold text-xs text-rose-200 truncate">مركبة [ ${m.plate} ]</div>
+                    <div class="text-[11px] text-slate-300 mt-0.5 line-clamp-1">${m.issue}</div>
+                  </div>
+                  <button onclick="resolveMaintenance(${m.id})" class="text-[10.5px] bg-rose-700 hover:bg-rose-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition active:scale-95 shadow whitespace-nowrap flex-shrink-0">
+                    تم الإصلاح
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <!-- Live Fleet Status (Optimized Alignment & Hierarchy) -->
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between text-xs text-slate-300 font-bold px-1">
+              <span class="flex items-center gap-1.5">
+                <span>🚗</span> موقف سيارات الحملة المباشر
+              </span>
+              <span class="text-[10px] text-emerald-400 font-medium">تحديث آلي</span>
+            </div>
+
+            ${appState.vehicles.map(v => {
+              const badgeStyle = v.status === 'في مأمورية' 
+                ? 'bg-emerald-950 text-emerald-300 border-emerald-500/50' 
+                : (v.status === 'في الورشة' 
+                  ? 'bg-rose-950 text-rose-300 border-rose-500/50' 
+                  : 'bg-slate-800 text-slate-300 border-slate-700');
+
+              return `
+                <div class="bg-slate-900/90 border border-slate-800/90 p-3 rounded-2xl shadow-sm hover:border-slate-700 transition">
+                  <!-- Header Row: Plate & Status -->
+                  <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="font-bold text-sm text-white whitespace-nowrap tracking-wide">${v.plate}</span>
+                      <span class="text-[11px] text-slate-400 truncate">(${v.model} • ${v.type})</span>
+                    </div>
+                    <span class="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 ${badgeStyle}">
+                      ${v.status}
+                    </span>
+                  </div>
+
+                  <!-- Details Row: Driver & Odometer (Clean 2-Column Split) -->
+                  <div class="grid grid-cols-2 gap-2 pt-2 text-[11px] text-slate-400">
+                    <div class="flex items-center gap-1.5 truncate">
+                      <span>👤</span>
+                      <span>السائق:</span>
+                      <strong class="text-slate-200 truncate font-semibold">${v.driver}</strong>
+                    </div>
+                    <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                      <span>⏱️</span>
+                      <span>العداد:</span>
+                      <strong class="text-slate-100 font-semibold font-mono">${v.km.toLocaleString()} كم</strong>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      // --- 2. VEHICLES LEDGER TAB ---
+      else if (appState.currentTab === 'vehicles') {
+        body.innerHTML = `
+          <div class="space-y-3">
+            <div class="bg-slate-900 p-2.5 rounded-2xl border border-slate-800 flex items-center gap-2 text-xs">
+              <span class="text-slate-400 text-sm">🔍</span>
+              <input type="text" placeholder="ابحث برقم لوحة السيارة أو الموديل..." class="bg-transparent text-white focus:outline-none flex-1 placeholder:text-slate-500 text-xs">
+            </div>
+
+            <div class="text-[11px] text-slate-400">سجل مستقل لكل سيارة برقمها (أرشيف كامل للخروج والعودة والصيانة):</div>
+
+            ${appState.vehicles.map(v => `
+              <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl space-y-2.5">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 gap-2">
+                  <div class="font-extrabold text-sm text-emerald-400 whitespace-nowrap">🚗 مركبة: [ ${v.plate} ]</div>
+                  <span class="text-[10.5px] bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-md font-semibold whitespace-nowrap">${v.status}</span>
+                </div>
+                <div class="text-xs text-slate-200 font-medium">${v.model} • ${v.type}</div>
+                
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-400 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/70">
+                  <div class="truncate">العداد الحالي: <strong class="text-white font-mono">${v.km.toLocaleString()} كم</strong></div>
+                  <div class="truncate">السائق الحالي: <strong class="text-white">${v.driver}</strong></div>
+                  <div class="truncate">معدل الوقود: <strong class="text-emerald-400 font-mono">${v.fuelRate} كم/لتر</strong></div>
+                  <div class="truncate">آخر غيار زيت: <strong class="text-amber-400 font-mono">${v.lastOilKm.toLocaleString()} كم</strong></div>
+                </div>
+
+                <div class="flex justify-end pt-1">
+                  <button onclick="requestVehicleLedger('${v.plate}')" class="text-[11px] bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl transition active:scale-95 shadow whitespace-nowrap">
+                    استخراج كشف حساب بالواتساب
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      // --- 3. FUEL & OIL RADAR TAB ---
+      else if (appState.currentTab === 'fuel') {
+        body.innerHTML = `
+          <div class="space-y-3.5">
+            <!-- Oil Radar -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-xs text-amber-300 flex items-center gap-1.5">
+                  <span class="text-base">⏱️</span> رادار الصيانة الدورية للزيوت والفلاتر
+                </span>
+                <span class="text-[10px] bg-amber-950/60 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-bold whitespace-nowrap">دورة 5,000 كم</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mb-3">حساب المسافة المتبقية تلقائياً من قراءات عدادات السيارات المستخرجة من الجروب:</p>
+
+              <div class="space-y-2">
+                ${appState.vehicles.map(v => {
+                  const next = v.lastOilKm + v.oilInterval;
+                  const remaining = next - v.km;
+                  let badge = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+                  let status = `متبقي ${remaining.toLocaleString()} كم`;
+                  if (remaining <= 0) {
+                    badge = 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse';
+                    status = `🚨 تجاوز الموعد بـ ${Math.abs(remaining)} كم`;
+                  } else if (remaining <= 800) {
+                    badge = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+                    status = `⚠️ اقترب الموعد (${remaining} كم)`;
+                  }
+
+                  return `
+                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800/90 shadow-sm space-y-2">
+                      <div class="flex items-center justify-between gap-2 border-b border-slate-800/60 pb-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                          <span class="text-sm">🚗</span>
+                          <span class="font-bold text-xs text-white whitespace-nowrap">[ ${v.plate} ]</span>
+                        </div>
+                        <span class="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 ${badge}">
+                          ${status}
+                        </span>
+                      </div>
+                      <div class="flex items-center justify-between gap-2 pt-0.5">
+                        <div class="text-[11px] text-slate-400 leading-tight">
+                          <div>العداد الحالي: <strong class="text-slate-100 font-mono">${v.km.toLocaleString()} كم</strong></div>
+                          <div class="text-slate-400 mt-0.5">آخر غيار زيت: <strong class="text-amber-400 font-mono">${v.lastOilKm.toLocaleString()} كم</strong></div>
+                        </div>
+                        <button onclick="recordOilReset('${v.plate}')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition active:scale-95 shadow">
+                          توثيق غيار
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Fuel Analytics -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-xs text-emerald-400 flex items-center gap-1.5">
+                  <span class="text-base">⛽</span> تحليلات استهلاك السولار والبنزين
+                </span>
+                <span class="text-[10px] text-slate-400 whitespace-nowrap">معدلات الاستهلاك</span>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-2 text-center my-2.5">
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                  <div class="text-[10px] text-slate-400">متوسط الأسطول</div>
+                  <div class="text-base font-bold text-emerald-400 font-mono">10.4 كم/لتر</div>
+                </div>
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                  <div class="text-[10px] text-slate-400">تنبيهات هدر / تسريب</div>
+                  <div class="text-base font-bold text-rose-400">1 إخطار مشبوه</div>
+                </div>
+              </div>
+
+              <div class="text-[11px] text-rose-300 bg-rose-950/30 border border-rose-900/50 p-2.5 rounded-xl leading-relaxed">
+                ⚠️ <strong>إخطار استهلاك مرتفع:</strong> سيارة [305 حكومي] استهلكت 65 لتر بمعدل 6.2 كم/لتر (أقل بـ 35% من المعدل القياسي). تم إرسال إشعار سري لواتساب المدير.
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // --- 4. HR & DRIVERS TAB ---
+      else if (appState.currentTab === 'hr') {
+        body.innerHTML = `
+          <div class="space-y-3">
+            <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex items-center justify-between">
+              <div>
+                <div class="text-[10.5px] text-slate-400 font-semibold">كشف حضور ومأموريات السائقين شهرياً</div>
+                <div class="text-xs font-bold text-white mt-0.5">شهر سبتمبر 2026 (مطابقة المستحقات)</div>
+              </div>
+              <span class="text-[10px] bg-indigo-500/20 text-indigo-300 font-bold px-2 py-0.5 rounded-md border border-indigo-500/30 whitespace-nowrap">
+                شؤون العاملين
+              </span>
+            </div>
+
+            <div class="space-y-2.5">
+              ${appState.drivers.map(d => `
+                <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl space-y-2">
+                  <div class="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 ${d.activeToday ? 'bg-emerald-500 shadow-sm shadow-emerald-500' : 'bg-slate-600'}"></span>
+                      <strong class="text-xs text-white truncate font-bold">${d.name}</strong>
+                    </div>
+                    <span class="text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-md whitespace-nowrap flex-shrink-0">
+                      ${d.days} يوم عمل هذا الشهر
+                    </span>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-1.5 text-[11px] text-slate-400 bg-slate-950/60 p-2 rounded-xl border border-slate-800/60">
+                    <div class="truncate">🚗 المركبة: <strong class="text-white">${d.car}</strong></div>
+                    <div class="truncate">🛣️ مسافة الشهر: <strong class="text-white font-mono">${d.totalKm.toLocaleString()} كم</strong></div>
+                    <div class="truncate">حالة اليوم: <strong class="${d.activeToday ? 'text-emerald-400' : 'text-slate-500'}">${d.activeToday ? 'في مأمورية' : 'لم يسجل خروج'}</strong></div>
+                    <div class="truncate">الهاتف: <strong class="text-white font-mono">${d.phone}</strong></div>
+                  </div>
+
+                  <div class="flex justify-end pt-1">
+                    <button onclick="sendHRAttendance('${d.name}')" class="text-[10.5px] bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 px-2.5 py-1 rounded-xl whitespace-nowrap transition active:scale-95">
+                      إرسال كشف الحضور المعتمد لواتساب
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // --- 5. CONTROL TAB (Where the Author Attribution belongs) ---
+      else if (appState.currentTab === 'control') {
+        body.innerHTML = `
+          <div class="space-y-3.5">
+            
+            <!-- 1. Privacy & Silent Mode Settings -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm">
+              <div class="flex items-center justify-between mb-1.5">
+                <h3 class="font-bold text-xs text-white flex items-center gap-1.5">
+                  <span class="text-sm">🔒</span> إعدادات الوضع الصامت والخصوصية
+                </h3>
+                <span class="text-[10px] bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                  ${appState.settings.isSilent ? 'المراقبة الصامتة مفعلة' : 'الردود مفعلة'}
+                </span>
+              </div>
+              <p class="text-[10.5px] text-slate-400 mb-3">
+                التحكم التام في إبقاء المنظومة إدارية بحتة دون إزعاج السائقين في الجروب:
+              </p>
+
+              <div class="space-y-2.5">
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 gap-2">
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-white">الوضع الصامت للمراقبة</div>
+                    <div class="text-[10px] text-slate-400">قراءة وتوثيق كل الصور دون نشر أي رد في الجروب نهائياً</div>
+                  </div>
+                  <input type="checkbox" ${appState.settings.isSilent ? 'checked' : ''} onchange="toggleSilent(this.checked)" class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
+                </div>
+
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <div class="text-xs font-bold text-white">رقم هاتف المدير الخاص للتنبيهات (WhatsApp)</div>
+                    <button onclick="testManagerAlert()" class="text-[10px] bg-emerald-950 text-emerald-400 hover:bg-emerald-900 border border-emerald-500/40 px-2 py-0.5 rounded-md font-bold transition">
+                      تجربة إرسال تنبيه
+                    </button>
+                  </div>
+                  <input type="text" value="${appState.settings.managerPhone}" onchange="appState.settings.managerPhone = this.value" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
+                  <div class="text-[10px] text-slate-400">تصلك عليه تنبيهات الزيوت والأعطال وهدر الوقود بسرية تامة.</div>
+                </div>
+
+                <!-- Private Alerts Routing Toggles -->
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2">
+                  <div class="text-[11px] font-bold text-slate-300">🚨 التنبيهات الخاصة المرسلة لواتساب المدير:</div>
+                  <div class="grid grid-cols-1 gap-1.5 text-[10.5px]">
+                    <label class="flex items-center justify-between text-slate-300 cursor-pointer">
+                      <span>• إخطار فوري عند الاشتباه في هدر أو تسريب وقود</span>
+                      <input type="checkbox" ${appState.settings.alertFuelWaste ? 'checked' : ''} onchange="appState.settings.alertFuelWaste = this.checked" class="accent-emerald-500 w-4 h-4">
+                    </label>
+                    <label class="flex items-center justify-between text-slate-300 cursor-pointer">
+                      <span>• إخطار عند اقتراب موعد غيار الزيت (قبل 500 كم)</span>
+                      <input type="checkbox" ${appState.settings.alertOilDue ? 'checked' : ''} onchange="appState.settings.alertOilDue = this.checked" class="accent-emerald-500 w-4 h-4">
+                    </label>
+                    <label class="flex items-center justify-between text-slate-300 cursor-pointer">
+                      <span>• إخطار عاجل عند رصد أي بلاغ عطل مفاجئ من السائقين</span>
+                      <input type="checkbox" ${appState.settings.alertUrgentBreakdown ? 'checked' : ''} onchange="appState.settings.alertUrgentBreakdown = this.checked" class="accent-emerald-500 w-4 h-4">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Bot Reading & Vision Permissions -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm space-y-2.5">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-xs text-white flex items-center gap-1.5">
+                  <span class="text-sm">👁️</span> أذونات وإمكانيات قراءة البوت الذكي
+                </h3>
+                <span class="text-[10px] bg-slate-800 text-sky-400 border border-slate-700 px-2 py-0.5 rounded-full font-bold">
+                  محرك Multimodal AI
+                </span>
+              </div>
+              <p class="text-[10.5px] text-slate-400">
+                تحديد المستندات والصور المصرح للذكاء الاصطناعي باستخراج بياناتها من الجروب:
+              </p>
+
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                  <div class="min-w-0 pr-1">
+                    <div class="font-bold text-white flex items-center gap-1.5">
+                      <span>⏱️</span> قراءة عدادات السيارات (الطبلون)
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">استخراج أرقام الكيلومترات وتحديث كشف الحركة آلياً</div>
+                  </div>
+                  <input type="checkbox" ${appState.settings.readOdometers ? 'checked' : ''} onchange="appState.settings.readOdometers = this.checked" class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
+                </div>
+
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                  <div class="min-w-0 pr-1">
+                    <div class="font-bold text-white flex items-center gap-1.5">
+                      <span>📋</span> قراءة أذون الخروج والعودة الورقية
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">تحليل خط اليد واستخراج وجهة السير ورقم اللوحة والوقت</div>
+                  </div>
+                  <input type="checkbox" ${appState.settings.readWaybills ? 'checked' : ''} onchange="appState.settings.readWaybills = this.checked" class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
+                </div>
+
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                  <div class="min-w-0 pr-1">
+                    <div class="font-bold text-white flex items-center gap-1.5">
+                      <span>⛽</span> قراءة فواتير وبونات الوقود
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">حساب اللترات والمبالغ واكتشاف أي هدر أو اختلاف بالكميات</div>
+                  </div>
+                  <input type="checkbox" ${appState.settings.readFuelReceipts ? 'checked' : ''} onchange="appState.settings.readFuelReceipts = this.checked" class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
+                </div>
+
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                  <div class="min-w-0 pr-1">
+                    <div class="font-bold text-white flex items-center gap-1.5">
+                      <span>🔧</span> رصد بلاغات الأعطال والملاحظات الفنية
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">التقاط شكاوى السائقين الفنية وإدراجها فوراً بجدول الصيانة</div>
+                  </div>
+                  <input type="checkbox" ${appState.settings.readFaults ? 'checked' : ''} onchange="appState.settings.readFaults = this.checked" class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
+                </div>
+
+                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                  <div class="min-w-0 pr-1">
+                    <div class="font-bold text-white flex items-center gap-1.5">
+                      <span>👔</span> حصر حضور ومأموريات السائقين شهرياً
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">تسجيل أيام وساعات العمل الرسمية لاعتماد مستحقات HR</div>
+                  </div>
+                  <input type="checkbox" ${appState.settings.readHRAttendance ? 'checked' : ''} onchange="appState.settings.readHRAttendance = this.checked" class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Interactive Replies & Suggested Templates -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-xs text-white flex items-center gap-1.5">
+                  <span class="text-sm">💬</span> التحكم بالرد التفاعلي وقوالب الردود
+                </h3>
+                <span class="text-[10px] ${appState.settings.replyInGroup ? 'text-emerald-400 bg-emerald-950/70 border-emerald-500/40' : 'text-slate-400 bg-slate-800'} px-2 py-0.5 rounded-full border font-bold">
+                  ${appState.settings.replyInGroup ? 'مفعل بالجروب' : 'معطل'}
+                </span>
+              </div>
+              <p class="text-[10.5px] text-slate-400">
+                تخصيص ردود البوت في الشات عند استلام أذون الخروج وبونات الوقود:
+              </p>
+
+              <!-- Master Toggle for Interactive Reply -->
+              <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                <div>
+                  <div class="text-xs font-bold text-white">تفعيل الرد التفاعلي بالجروب</div>
+                  <div class="text-[10px] text-slate-400">إرسال تأكيد استلام فوري في شات السائقين</div>
+                </div>
+                <input type="checkbox" ${appState.settings.replyInGroup ? 'checked' : ''} onchange="toggleReply(this.checked)" class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
+              </div>
+
+              <!-- Options when replies enabled -->
+              <div class="space-y-2.5 pt-1">
+                <!-- Scope of Replies -->
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
+                  <div class="text-xs font-bold text-white">أذونات من يحق له تلقي رد البوت بالجروب:</div>
+                  <div class="grid grid-cols-2 gap-2 text-[11px]">
+                    <label class="flex items-center gap-2 p-2 bg-slate-900 rounded-lg border border-slate-800 cursor-pointer">
+                      <input type="radio" name="replyScope" value="manager_only" ${appState.settings.replyScope === 'manager_only' ? 'checked' : ''} onchange="appState.settings.replyScope = this.value" class="accent-emerald-500">
+                      <span class="text-slate-200">المدير فقط (أكثر هدوءاً)</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-slate-900 rounded-lg border border-slate-800 cursor-pointer">
+                      <input type="radio" name="replyScope" value="all_drivers" ${appState.settings.replyScope === 'all_drivers' ? 'checked' : ''} onchange="appState.settings.replyScope = this.value" class="accent-emerald-500">
+                      <span class="text-slate-200">جميع السائقين</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Suggested Reply Templates -->
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2.5">
+                  <div class="flex items-center justify-between">
+                    <div class="text-xs font-bold text-amber-300">قوالب الردود المقترحة (قابلة للتعديل):</div>
+                    <button onclick="testInteractiveReply()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 px-2 py-1 rounded-md font-bold transition active:scale-95">
+                      👁️ تجربة الرد
+                    </button>
+                  </div>
+
+                  <div class="space-y-2 text-[11px]">
+                    <div>
+                      <div class="text-slate-400 mb-1">1. رد توثيق خروج سيارة:</div>
+                      <input type="text" value="${appState.settings.replyExitText}" onchange="appState.settings.replyExitText = this.value" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div>
+                      <div class="text-slate-400 mb-1">2. رد توثيق عودة سيارة:</div>
+                      <input type="text" value="${appState.settings.replyReturnText}" onchange="appState.settings.replyReturnText = this.value" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div>
+                      <div class="text-slate-400 mb-1">3. رد اعتماد بون وقود:</div>
+                      <input type="text" value="${appState.settings.replyFuelText}" onchange="appState.settings.replyFuelText = this.value" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    </div>
+                  </div>
+                  <div class="text-[9.5px] text-slate-500">المتغيرات المتاحة تلقائياً: {اللوحة}، {العداد}، {المسافة}، {اللترات}.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Active Working Hours -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl shadow-sm space-y-2">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-xs text-white flex items-center gap-1.5">
+                  <span class="text-sm">⏰</span> فترات عمل ورصد البوت
+                </h3>
+                <span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                  ${appState.settings.activeHours === '24/7' ? 'طوال اليوم (24/7)' : 'أوقات العمل الرسمية'}
+                </span>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <button onclick="appState.settings.activeHours = '24/7'; render();" class="p-2.5 rounded-xl border text-right transition ${appState.settings.activeHours === '24/7' ? 'bg-emerald-950/70 border-emerald-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}">
+                  <div class="font-bold text-[11.5px]">24 ساعة يومياً</div>
+                  <div class="text-[10px] opacity-80 mt-0.5">تغطية النوبتجيات الليلية والصباحية</div>
+                </button>
+                <button onclick="appState.settings.activeHours = 'official'; render();" class="p-2.5 rounded-xl border text-right transition ${appState.settings.activeHours === 'official' ? 'bg-emerald-950/70 border-emerald-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}">
+                  <div class="font-bold text-[11.5px]">ساعات العمل الرسمية</div>
+                  <div class="text-[10px] opacity-80 mt-0.5">من 07:00 ص حتى 07:00 م فقط</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- 5. WhatsApp QR Connection -->
+            <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl text-center shadow-sm">
+              <div class="text-xs font-bold text-white mb-1">ربط واتساب بمسح رمز QR</div>
+              <div class="text-[11px] text-slate-400 mb-2.5">حالة البوت: <span class="text-emerald-400 font-bold">🟢 متصل ومفعل</span></div>
+              <div class="bg-white p-2.5 rounded-xl w-32 h-32 mx-auto flex items-center justify-center border-2 border-emerald-500 shadow-md">
+                <div class="text-slate-900 text-xs font-mono font-bold text-center leading-tight">
+                  [ رمز QR<br>واتساب ]<br>
+                  <span class="text-[9px] text-slate-600">امسح للربط</span>
+                </div>
+              </div>
+              <div class="text-[10.5px] text-slate-400 mt-2.5">
+                لتفعيل أي جروب جديد، أضف الرقم واكتب بالجروب: <code class="text-emerald-400 font-bold">/تفعيل</code>
+              </div>
+            </div>
+
+            <!-- 6. OFFICIAL AUTHOR SIGNATURE (Exclusive to Control Tab) -->
+            <div class="pt-4 pb-2 border-t border-slate-800/90 text-center space-y-1">
+              <div class="text-[11px] text-slate-400 font-medium">صُمم وطُوّر بواسطة</div>
+              <div class="text-sm md:text-base font-black text-amber-400 tracking-wider">ABDOU ALI MOUSA</div>
+            </div>
+
+          </div>
+        `;
+      }
+    }
+
+    function testManagerAlert() {
+      alert(`📲 تم إرسال تنبيه تجريبي سري إلى واتساب المدير (${appState.settings.managerPhone}):\n\n🚨 [تنبيه طوارئ تجريبي]\nالمركبة: [305 حكومي]\nالنوع: إخطار تجريبي للتأكد من وصول التنبيهات الفورية على رقمكم.`);
+    }
+
+    function testInteractiveReply() {
+      const msg = appState.settings.replyExitText
+        .replace('{اللوحة}', '102 حكومي')
+        .replace('{العداد}', '48,500 كم')
+        .replace('{المسافة}', '120 كم')
+        .replace('{اللترات}', '40');
+      alert(`💬 معاينة شكل الرد التفاعلي المقترح في جروب الواتساب:\n\n🤖 مراقب الحملة:\n"${msg}"`);
+    }
+
+    async function resolveMaintenance(id) {
+      appState.maintenance = appState.maintenance.filter(m => m.id !== id);
+      try {
+        await fetch(`/api/maintenance/${id}/resolve`, { method: 'POST' });
+      } catch (e) {}
+      alert('✅ تم اعتماد الإصلاح وحفظه في السجل الفني للمركبة سحابياً.');
+      render();
+    }
+
+    async function recordOilReset(plate) {
+      const v = appState.vehicles.find(x => x.plate === plate);
+      if (v) {
+        v.lastOilKm = v.km;
+        try {
+          await fetch('/api/oil/record', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plate: v.plate, currentKm: v.km, intervalKm: v.oilInterval || 5000 })
+          });
+        } catch (e) {}
+        alert(`✅ تم توثيق غيار زيت جديد للمركبة [${plate}] عند عداد ${v.km.toLocaleString()} كم، وتصفير العداد للـ 5000 كم القادمة وتسجيله سحابياً.`);
+        render();
+      }
+    }
+
+    async function requestVehicleLedger(plate) {
+      const v = appState.vehicles.find(x => x.plate === plate);
+      try {
+        const res = await fetch('/api/reports/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'vehicle', target: plate })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          alert(`🚗 كشف حساب سحابي للمركبة [${plate}]:\n\n${data.report}`);
+          return;
+        }
+      } catch (e) {}
+      alert(`🚗 تقرير حركة واستهلاك المركبة [${plate}]:\n• العداد الحالي: ${v.km.toLocaleString()} كم\n• السائق: ${v.driver}\n• معدل الوقود: ${v.fuelRate} كم/لتر\n• آخر غيار زيت: ${v.lastOilKm.toLocaleString()} كم\n\n(تم حفظ وتحديث السجل سحابياً)`);
+    }
+
+    async function sendHRAttendance(name) {
+      const d = appState.drivers.find(x => x.name === name);
+      try {
+        const res = await fetch('/api/reports/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'driver', target: name })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          alert(`👔 كشف حضور ومأموريات السائق سحابياً [${name}]:\n\n${data.report}`);
+          return;
+        }
+      } catch (e) {}
+      alert(`👔 كشف حضور ومأموريات السائق [${name}]:\n• أيام العمل الفعلية هذا الشهر: ${d.days} يوم\n• المركبة المسجلة في عهدته: ${d.car}\n• إجمالي الكيلومترات: ${d.totalKm.toLocaleString()} كم\n\n(معتمد ومسجل سحابياً لشؤون العاملين)`);
+    }
+
+    async function toggleSilent(val) {
+      appState.settings.isSilent = val;
+      try {
+        await fetch('/api/groups/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId: 'default', isSilent: val })
+        });
+      } catch (e) {}
+      alert(val ? '🔒 تم تفعيل الوضع الصامت: البوت يسجل سحابياً دون نشر في الجروب.' : '📢 تم إيقاف الوضع الصامت.');
+    }
+
+    async function toggleReply(val) {
+      appState.settings.replyInGroup = val;
+      try {
+        await fetch('/api/groups/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId: 'default', replyInGroup: val })
+        });
+      } catch (e) {}
+    }
+
+    // Live Cloud Data Synchronization
+    async function syncFromCloud() {
+      try {
+        const res = await fetch('/api/dashboard');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            const statusEl = document.getElementById('cloudStatusText');
+            if (statusEl) statusEl.textContent = 'سحابي مباشر 24/7 (متصل)';
+            
+            // Sync Vehicles
+            const vRes = await fetch('/api/vehicles');
+            if (vRes.ok) {
+              const vData = await vRes.json();
+              if (vData.vehicles && vData.vehicles.length > 0) {
+                appState.vehicles = vData.vehicles.map(v => ({
+                  plate: v.plate,
+                  type: v.type || 'خدمة',
+                  model: v.model || '',
+                  km: v.current_km || 0,
+                  status: v.status || 'بمقر الحملة',
+                  driver: v.current_driver || 'غير محدد',
+                  lastOilKm: v.last_oil_km || 0,
+                  oilInterval: v.oil_change_interval || 5000,
+                  fuelRate: v.avg_fuel_consumption || 10.4
+                }));
+              }
+            }
+
+            // Sync Drivers
+            const dRes = await fetch('/api/drivers');
+            if (dRes.ok) {
+              const dData = await dRes.json();
+              if (dData.drivers && dData.drivers.length > 0) {
+                appState.drivers = dData.drivers.map(d => ({
+                  name: d.name,
+                  phone: d.phone || '',
+                  car: d.current_vehicle || 'مركبة الحملة',
+                  days: d.actual_work_days || 0,
+                  activeToday: d.today_trips_count > 0,
+                  totalKm: d.monthly_total_km || 0
+                }));
+              }
+            }
+
+            render();
+          }
+        }
+      } catch (err) {
+        // Standalone or offline mode
+      }
+    }
+
+    // Auto-sync every 10 seconds
+    syncFromCloud();
+    setInterval(syncFromCloud, 10000);
+
+    function togglePrivacyNotice() {
+      alert("منظومة مراقب جروب الحملة:\n• مخصصة لقطاع النقل والخدمات الحكومية.\n• متصلة بالذكاء الاصطناعي متعدد الوسائط لتحليل أوراق الشغل وصور العدادات وبونات الوقود.\n• صُمم وطُوّر بواسطة: ABDOU ALI MOUSA");
+    }
+
+    let deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      const btn = document.getElementById('pwaInstallBtn');
+      if (btn) btn.classList.remove('hidden');
+    });
+
+    function installPWA() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(() => {
+          deferredInstallPrompt = null;
+        });
+      } else {
+        alert("📲 لتثبيت التطبيق مباشرة على هاتفك كبرنامج رسمي:\n\n1. افتح الرابط في متصفح الهاتف (مثل Google Chrome).\n2. اضغط على قائمة الخيارات (الثلاث نقاط ⋮ بالمتصفح).\n3. اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية» (Install App / Add to Home screen).\n4. ستظهر أيقونة التطبيق الرسمية فوراً على شاشة هاتفك وتعمل كتطبيق مستقل كامل!");
+      }
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    // Initial load
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "مراقب جروب الحملة",
+  "short_name": "مراقب الحملة",
+  "description": "المنظومة الذكية لإدارة سيارات وسائقي الحملة - قطاع النقل والخدمات الحكومية",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
