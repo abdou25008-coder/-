@@ -297,9 +297,9 @@
               </div>
             </div>
             <div class="flex items-center gap-1.5 flex-shrink-0">
-              <button onclick="triggerChatFileSelect()" class="text-xs bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/80 px-2 py-1 rounded-lg font-bold flex items-center gap-1 transition shadow active:scale-95" title="قراءة ملف شات جديد وتحديث السجلات فوراً">
-                <span>📂</span>
-                <span>تحديث الشات</span>
+              <button onclick="openQuickPermitModal()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition shadow active:scale-95" title="إرسال إذن حركة رسمي لجروب الواتساب">
+                <span>📲</span>
+                <span>إذن حركة</span>
               </button>
               <button onclick="confirmLogoutGroup()" class="text-xs bg-rose-950/90 hover:bg-rose-900 text-rose-300 border border-rose-800/80 px-2 py-1 rounded-lg font-bold flex items-center gap-1 transition shadow active:scale-95" title="تسجيل الخروج لمتابعة جروب آخر">
                 <span>🚪</span>
@@ -350,6 +350,23 @@
                 <div class="text-amber-400 font-bold">${appState.session.keepLoggedIn ? 'مفعل دائماً' : 'جلسة مؤقتة'}</div>
               </div>
             </div>
+          </div>
+
+          <!-- Quick WhatsApp Action Banner (For Drivers & Any Member) -->
+          <div class="bg-gradient-to-r from-emerald-950/90 via-slate-900 to-teal-950/90 border border-emerald-500/50 p-3.5 rounded-2xl shadow-md flex items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl flex-shrink-0">
+                📲
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-black text-white truncate">إذن حركة رسمي فوري لواتساب</div>
+                <div class="text-[11px] text-slate-300 truncate">توثيق خروج/عودة/وقود وإرساله للجروب فوراً</div>
+              </div>
+            </div>
+            <button onclick="openQuickPermitModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center gap-1.5 shadow-lg transition active:scale-95 whitespace-nowrap flex-shrink-0">
+              <span>✍️</span>
+              <span>تسجيل حركة</span>
+            </button>
           </div>
 
           <!-- Quick Campaign Metrics -->
@@ -1180,44 +1197,149 @@
       render();
     }
 
-    let activeConnectTab = 'chat_file';
-
-    function switchConnectTab(tab) {
-      activeConnectTab = tab;
-      const tabFile = document.getElementById('cTabFile');
-      const tabPaste = document.getElementById('cTabPaste');
-      const tabLink = document.getElementById('cTabLink');
-      const tabServer = document.getElementById('cTabServer');
-
-      const pFile = document.getElementById('cPanelFile');
-      const pPaste = document.getElementById('cPanelPaste');
-      const pLink = document.getElementById('cPanelLink');
-      const pServer = document.getElementById('cPanelServer');
-
-      [tabFile, tabPaste, tabLink, tabServer].forEach(t => {
-        if (t) {
-          t.className = 'py-2 px-2.5 rounded-xl text-xs font-bold transition flex-1 text-center bg-slate-950 text-slate-400 border border-slate-800';
-        }
-      });
-      [pFile, pPaste, pLink, pServer].forEach(p => {
-        if (p) p.classList.add('hidden');
-      });
-
-      if (tab === 'chat_file' && tabFile && pFile) {
-        tabFile.className = 'py-2 px-2.5 rounded-xl text-xs font-bold transition flex-1 text-center bg-emerald-700 text-white shadow';
-        pFile.classList.remove('hidden');
-      } else if (tab === 'chat_paste' && tabPaste && pPaste) {
-        tabPaste.className = 'py-2 px-2.5 rounded-xl text-xs font-bold transition flex-1 text-center bg-emerald-700 text-white shadow';
-        pPaste.classList.remove('hidden');
-      } else if (tab === 'group_link' && tabLink && pLink) {
-        tabLink.className = 'py-2 px-2.5 rounded-xl text-xs font-bold transition flex-1 text-center bg-emerald-700 text-white shadow';
-        pLink.classList.remove('hidden');
-      } else if (tab === 'cloud_server' && tabServer && pServer) {
-        tabServer.className = 'py-2 px-2.5 rounded-xl text-xs font-bold transition flex-1 text-center bg-emerald-700 text-white shadow';
-        pServer.classList.remove('hidden');
-      }
+    // --- 1. DOWNLOAD BOT VCARD (Add Bot to WhatsApp Group) ---
+    function downloadBotVCard() {
+      const vcard = "BEGIN:VCARD\r\nVERSION:3.0\r\nFN:مراقب جروب الحملة الذكي\r\nTEL;TYPE=CELL,VOICE:+201092519210\r\nORG:قطاع النقل والخدمات الحكومية\r\nTITLE:بوت رصد الحركة والعدادات 24/7\r\nNOTE:أضف هذا الرقم إلى جروب حركة الحملة لتفعيل الرصد التلقائي للأذون والعدادات 24/7\r\nEND:VCARD";
+      const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'مراقب_الحملة_الذكي.vcf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert("📥 تم تنزيل جهة اتصال البوت (VCard)!\n\n1. افتح الملف المحمل واضغط «حفظ في جهات الاتصال».\n2. افتح جروب حركة الحملة في واتساب > معلومات المجموعة > «إضافة عضو».\n3. اختر «مراقب جروب الحملة الذكي».\n\nوسيبدأ البوت برصد وتوثيق أذون الحركة وصور العدادات وبونات الوقود فوراً!");
     }
 
+    // --- 2. QUICK WHATSAPP PERMIT DISPATCHER (For Drivers & Any Group Member) ---
+    function sendQuickWhatsAppPermit(prefix = '') {
+      const carPlateEl = document.getElementById(prefix + 'qpCar');
+      const pTypeEl = document.getElementById(prefix + 'qpType');
+      const kmEl = document.getElementById(prefix + 'qpKm');
+      const driverEl = document.getElementById(prefix + 'qpDriver');
+      const notesEl = document.getElementById(prefix + 'qpNotes');
+
+      const carPlate = carPlateEl ? carPlateEl.value : (appState.vehicles[0] ? appState.vehicles[0].plate : '102 حكومي');
+      const pType = pTypeEl ? pTypeEl.value : 'خروج مأمورية رسمية';
+      const kmVal = kmEl ? kmEl.value.trim() : '';
+      const driver = driverEl ? driverEl.value.trim() : '';
+      const notes = notesEl ? notesEl.value.trim() : '';
+
+      if (!kmVal) {
+        alert('⚠️ يرجى إدخال قراءة عداد السيارة الحالية بالكيلومتر.');
+        return;
+      }
+
+      const numKm = parseInt(kmVal, 10);
+      const v = appState.vehicles.find(x => x.plate === carPlate);
+      if (v) {
+        v.km = numKm;
+        if (driver) v.driver = driver;
+        if (pType.includes('خروج')) {
+          v.status = 'في مأمورية';
+        } else if (pType.includes('عودة')) {
+          v.status = 'بمقر الحملة';
+        } else if (pType.includes('عطل') || pType.includes('صيانة')) {
+          v.status = 'في الورشة';
+        }
+        saveFleetDataLocally();
+      }
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('ar-EG');
+
+      let icon = '🚗';
+      if (pType.includes('عودة')) icon = '🏁';
+      else if (pType.includes('وقود')) icon = '⛽';
+      else if (pType.includes('عطل') || pType.includes('صيانة')) icon = '🚨';
+
+      const permitMessage = `${icon} *إذن حركة رسمي - منظومة الحملة*
+━━━━━━━━━━━━━━━
+• المركبة: [ ${carPlate} ]
+• نوع الحركة: ${pType}
+• قراءة العداد: ${numKm.toLocaleString()} كم
+• السائق: ${driver || (v ? v.driver : 'سائق الحملة')}
+• خط السير / الملاحظات: ${notes || 'مأمورية رسمية اعتيادية'}
+• التوقيت: ${timeStr} (${dateStr})
+━━━━━━━━━━━━━━━
+✅ موثق ومسجل سحابياً بالمنظومة الذكية`;
+
+      const encoded = encodeURIComponent(permitMessage);
+      const waUrl = `https://api.whatsapp.com/send?text=${encoded}`;
+
+      // Auto-save session & login
+      appState.session.isLoggedIn = true;
+      appState.session.keepLoggedIn = true;
+      try {
+        localStorage.setItem('fleet_group_session', JSON.stringify(appState.session));
+      } catch(e) {}
+
+      closeCrudModal();
+      render();
+
+      // Open WhatsApp
+      window.open(waUrl, '_blank');
+      alert(`✅ تم توثيق الإذن بالمنظومة وتحديث عداد السيارة [ ${carPlate} ] إلى ${numKm.toLocaleString()} كم!\n\nجاري فتح تطبيق WhatsApp لإرسال الإذن في جروب الحملة بنقرة واحدة.`);
+    }
+
+    // --- 3. MODAL FOR QUICK PERMIT FROM ANY TAB ---
+    function openQuickPermitModal() {
+      const vOptions = appState.vehicles.map(v => `<option value="${v.plate}">[ ${v.plate} ] - ${v.model} (${v.driver})</option>`).join('');
+
+      document.getElementById('crudModalTitleText').textContent = '📲 إرسال إذن حركة رسمي لجروب الواتساب';
+      document.getElementById('crudModalBody').innerHTML = `
+        <div class="bg-emerald-950/40 border border-emerald-500/40 p-3 rounded-2xl text-xs text-emerald-300 leading-relaxed">
+          ⚡ <strong>لجميع السائقين والأعضاء:</strong> يتيح هذا النموذج لأي عضو توثيق الحركة بالمنظومة وإرسالها منسقة رسمياً لشات جروب الواتساب بنقرة واحدة!
+        </div>
+
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300">اختر السيارة:</label>
+          <select id="modal_qpCar" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-emerald-500 font-bold">
+            ${vOptions}
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">نوع الحركة:</label>
+            <select id="modal_qpType" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2.5 text-white text-xs focus:outline-none focus:border-emerald-500">
+              <option value="خروج مأمورية رسمية">🚗 خروج مأمورية</option>
+              <option value="عودة لمقر الحملة">🏁 عودة للحملة</option>
+              <option value="استلام بون وقود / تموين">⛽ بون وقود</option>
+              <option value="إبلاغ عن عطل أو صيانة">🚨 إبلاغ عن عطل</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">العداد الحالي (كم):</label>
+            <input type="number" id="modal_qpKm" placeholder="مثال: 48500" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">اسم السائق:</label>
+            <input type="text" id="modal_qpDriver" placeholder="اسم السائق" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300">خط السير / ملاحظات:</label>
+            <input type="text" id="modal_qpNotes" placeholder="مثال: مأمورية الوزارة" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800">
+          <button onclick="sendQuickWhatsAppPermit('modal_')" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-[0.98]">
+            <span class="text-lg">📲</span>
+            <span>إرسال الإذن لجروب الواتساب وتوثيقه فوراً</span>
+          </button>
+        </div>
+      `;
+
+      document.getElementById('crudModal').classList.remove('hidden');
+    }
+
+    // --- 4. CHAT FILE IMPORT & DIRECT PARSER ---
     function triggerChatFileSelect() {
       const input = document.getElementById('chatFileInput');
       if (input) input.click();
@@ -1310,201 +1432,205 @@
       if (el) el.value = name;
     }
 
+    // --- 5. RENDER LANDING & WHATSAPP CONNECTION GATE (Universal for Any Member) ---
     function renderLoginAndGroupConnectScreen() {
+      const vOptions = appState.vehicles.map(v => `<option value="${v.plate}">[ ${v.plate} ] - ${v.model} (${v.driver})</option>`).join('');
+
       return `
         <div class="space-y-4 py-1">
-          <!-- Hidden File Input for Real WhatsApp Chat Import -->
-          <input type="file" id="chatFileInput" accept=".txt" class="hidden" onchange="handleChatFileUpload(event)">
 
           <!-- Official Government Header Badge -->
           <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-emerald-500/40 p-5 rounded-3xl text-center shadow-lg relative overflow-hidden">
             <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-900 p-0.5 shadow-xl flex items-center justify-center border border-emerald-400/60 mb-3">
               <span class="text-3xl">🛡️</span>
             </div>
-            <h2 class="text-lg font-black text-white">بوابة مراقبة أسطول الحملة</h2>
+            <h2 class="text-lg font-black text-white">منظومة مراقبة جروب الحملة</h2>
             <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-              المنظومة الذكية لرصد جروب حركة الحملة وقراءة العدادات وأذون الخروج وبونات الوقود
+              الربط الذكي لرصد سيارات وسائقي الحملة وقراءة العدادات وأذون الحركة وبونات الوقود
             </p>
             <div class="mt-3 inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs px-3.5 py-1 rounded-full font-bold">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>مراقبة وإدارة ذكية 24/7</span>
+              <span>متاح لجميع السائقين والمشرفين 24/7</span>
             </div>
           </div>
 
-          <!-- App Concept Overview (4 Pillars) -->
-          <div class="bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 border border-emerald-500/40 p-4 rounded-3xl shadow-md space-y-3">
+          <!-- ========================================== -->
+          <!-- METHOD 1: QUICK WHATSAPP PERMIT (FOR ANYONE) -->
+          <!-- ========================================== -->
+          <div class="bg-gradient-to-b from-slate-900 via-slate-900 to-emerald-950/40 border-2 border-emerald-500/70 p-4 rounded-3xl shadow-xl space-y-3.5 relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-emerald-500/30 pb-2.5">
+              <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/40 font-black">
+                  1
+                </div>
+                <div>
+                  <h3 class="font-black text-sm text-white flex items-center gap-1.5">
+                    <span>📲</span>
+                    <span>إرسال إذن حركة سريع لجروب الواتساب</span>
+                  </h3>
+                  <div class="text-[11px] text-emerald-400 font-semibold">الوسيلة الأسهل لأي سائق أو مشرف (بضغطة واحدة)</div>
+                </div>
+              </div>
+              <span class="text-xs bg-emerald-500 text-slate-950 font-black px-2.5 py-0.5 rounded-full shadow">فوري</span>
+            </div>
+
+            <p class="text-xs text-slate-300 leading-relaxed">
+              اختر سيارتك واكتب العداد، واضغط زر الإرسال؛ سيتم <strong>توثيق الحركة بالمنظومة فوراً</strong> وفتح واتساب لإرسال الإذن الرسمي في الجروب بلمسة واحدة!
+            </p>
+
+            <!-- Form Elements -->
+            <div class="space-y-2.5 text-right">
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-200">اختر السيارة:</label>
+                <select id="home_qpCar" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-emerald-500 font-bold">
+                  ${vOptions}
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-slate-200">نوع الحركة:</label>
+                  <select id="home_qpType" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2.5 text-white text-xs focus:outline-none focus:border-emerald-500">
+                    <option value="خروج مأمورية رسمية">🚗 خروج مأمورية</option>
+                    <option value="عودة لمقر الحملة">🏁 عودة للحملة</option>
+                    <option value="استلام بون وقود / تموين">⛽ بون وقود</option>
+                    <option value="إبلاغ عن عطل أو صيانة">🚨 إبلاغ عن عطل</option>
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-slate-200">العداد الحالي (كم):</label>
+                  <input type="number" id="home_qpKm" placeholder="مثال: 48500" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-slate-200">اسم السائق:</label>
+                  <input type="text" id="home_qpDriver" placeholder="اسم السائق" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-slate-200">خط السير / ملاحظات:</label>
+                  <input type="text" id="home_qpNotes" placeholder="مثال: مأمورية الوزارة" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500">
+                </div>
+              </div>
+
+              <button type="button" onclick="sendQuickWhatsAppPermit('home_')" class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black py-4 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/80 transition active:scale-[0.98] mt-1">
+                <span class="text-xl">📲</span>
+                <span>إرسال الإذن فوراً لجروب الواتساب وتوثيقه بالمنظومة</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ========================================== -->
+          <!-- METHOD 2: ADD BOT NUMBER TO GROUP (24/7) -->
+          <!-- ========================================== -->
+          <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl shadow-sm space-y-3">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <div class="flex items-center gap-2">
-                <span class="text-xl">💡</span>
+                <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl border border-sky-500/40 font-black">
+                  2
+                </div>
                 <div>
-                  <h3 class="font-black text-sm text-white">فكرة المنظومة وأهميتها للحملة</h3>
-                  <div class="text-[11px] text-emerald-400 font-semibold">تحويل شات جروب الحركة إلى قاعدة بيانات متكاملة تلقائياً</div>
+                  <h3 class="font-bold text-sm text-white flex items-center gap-1.5">
+                    <span>🤖</span>
+                    <span>إضافة رقم المنظومة كعضو في الجروب (الرصد التلقائي)</span>
+                  </h3>
+                  <div class="text-[11px] text-sky-400 font-semibold">المعيار العالمي لإدارة جروبات الواتساب بدون تدخل يدوي</div>
                 </div>
               </div>
-              <span class="text-xs bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-bold whitespace-nowrap">متابعة صامتة</span>
+              <span class="text-xs bg-sky-950 text-sky-300 border border-sky-500/40 px-2.5 py-0.5 rounded-full font-bold">24/7</span>
             </div>
 
-            <!-- 4 Mobile Feature Cards -->
-            <div class="grid grid-cols-2 gap-2.5 text-xs">
-              <div class="bg-slate-950/90 border border-slate-800 p-3 rounded-2xl space-y-1">
-                <div class="flex items-center gap-1.5 font-bold text-white">
-                  <span class="text-base">🚗</span>
-                  <span>رصد العدادات</span>
-                </div>
-                <div class="text-[11px] text-slate-400 leading-snug">
-                  قراءة صور طبلون السيارات وأذون الحركة وتحديث الكيلومترات لحظياً.
-                </div>
-              </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              أضف رقم بوت المنظومة المعتمد إلى جروب حركة الحملة؛ وسيقوم البوت برصد أي رسالة أو صورة عداد أو بون وقود تُنشر في الجروب تلقائياً في صمت تام:
+            </p>
 
-              <div class="bg-slate-950/90 border border-slate-800 p-3 rounded-2xl space-y-1">
-                <div class="flex items-center gap-1.5 font-bold text-white">
-                  <span class="text-base">⛽</span>
-                  <span>كشف هدر الوقود</span>
-                </div>
-                <div class="text-[11px] text-slate-400 leading-snug">
-                  تحليل فواتير وبونات الوقود وحساب معدل الاستهلاك الفعلي وموعد الزيت.
-                </div>
+            <div class="bg-slate-950/90 p-3 rounded-2xl border border-slate-800 flex items-center justify-between gap-2">
+              <div>
+                <div class="text-[11px] text-slate-400">رقم واتساب المنظومة المعتمد:</div>
+                <div class="text-base font-black text-white font-mono tracking-wider">01092519210</div>
               </div>
+              <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-lg font-bold">نشط 24 ساعة</span>
+            </div>
 
-              <div class="bg-slate-950/90 border border-slate-800 p-3 rounded-2xl space-y-1">
-                <div class="flex items-center gap-1.5 font-bold text-white">
-                  <span class="text-base">👔</span>
-                  <span>حضور السائقين</span>
-                </div>
-                <div class="text-[11px] text-slate-400 leading-snug">
-                  حصر مأموريات وأيام عمل السائقين شهرياً لمطابقة كشوف HR.
-                </div>
-              </div>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="downloadBotVCard()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition border border-slate-700 shadow active:scale-95">
+                <span>📥</span>
+                <span>حفظ جهة الاتصال (VCard)</span>
+              </button>
 
-              <div class="bg-slate-950/90 border border-slate-800 p-3 rounded-2xl space-y-1">
-                <div class="flex items-center gap-1.5 font-bold text-white">
-                  <span class="text-base">🔒</span>
-                  <span>مراقبة سرية</span>
-                </div>
-                <div class="text-[11px] text-slate-400 leading-snug">
-                  مراقبة إدارية هادئة وسرية تامة دون إزعاج السائقين في شات الجروب.
-                </div>
-              </div>
+              <a href="https://wa.me/201092519210?text=%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%A7%D9%84%D8%AD%D9%85%D9%84%D8%A9" target="_blank" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow active:scale-95">
+                <span>💬</span>
+                <span>مراسلة البوت</span>
+              </a>
+            </div>
+
+            <div class="text-[10.5px] text-slate-400 bg-slate-950/50 p-2 rounded-xl border border-slate-800/80 text-center">
+              💡 أو يمكن لأي عضو كتابة أمر <code class="text-emerald-400 font-bold bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">/تفعيل</code> في شات الجروب مباشرة.
             </div>
           </div>
 
-          <!-- WhatsApp Group Connection Card (Clarified & Real) -->
-          <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl shadow-sm space-y-3.5">
+          <!-- ========================================== -->
+          <!-- METHOD 3: GROUP INVITE LINK / DIRECT LOGIN -->
+          <!-- ========================================== -->
+          <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl shadow-sm space-y-3">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <div class="text-right">
-                <div class="text-sm font-bold text-white flex items-center gap-2">
-                  <span class="text-emerald-400">📱</span>
-                  <span>طرق ربط وقراءة جروب الواتساب</span>
+              <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl border border-amber-500/40 font-black">
+                  3
                 </div>
-                <div class="text-xs text-slate-400 mt-0.5">اختر الطريقة الأنسب لهاتفك:</div>
-              </div>
-              <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-full font-bold">🟢 متاح على الهاتف</span>
-            </div>
-
-            <!-- Clarification Notice -->
-            <div class="bg-slate-950/90 border border-slate-800 p-3 rounded-2xl text-xs text-slate-300 space-y-1 leading-relaxed">
-              <div class="font-bold text-emerald-400 flex items-center gap-1.5">
-                <span>ℹ️</span>
-                <span>تنبيه هام حول ربط واتساب من الهاتف:</span>
-              </div>
-              <div>
-                تطبيق واتساب الرسمي (خاصية الأجهزة المرتبطة) يتطلب خادم Node.js وسيط مشفر للاتصال بسيرفرات ميتا. ولتوفير أقصى مرونة على الهاتف دون الحاجة لخوادم خارجية معقدة، تتيح لك المنظومة <strong>قراءة واستيراد شات الجروب فوراً</strong> بنقرة واحدة أدناه.
-              </div>
-            </div>
-
-            <!-- Tab Switchers -->
-            <div class="flex items-center bg-slate-950 p-1.5 rounded-2xl border border-slate-800 gap-1.5">
-              <button type="button" id="cTabFile" onclick="switchConnectTab('chat_file')" class="py-2 px-2.5 rounded-xl text-xs font-bold transition flex-1 text-center bg-emerald-700 text-white shadow">
-                📁 رفع ملف الشات
-              </button>
-              <button type="button" id="cTabPaste" onclick="switchConnectTab('chat_paste')" class="py-2 px-2.5 rounded-xl text-xs font-bold transition flex-1 text-center bg-slate-950 text-slate-400 border border-slate-800">
-                📝 لصق رسائل
-              </button>
-              <button type="button" id="cTabLink" onclick="switchConnectTab('group_link')" class="py-2 px-2.5 rounded-xl text-xs font-bold transition flex-1 text-center bg-slate-950 text-slate-400 border border-slate-800">
-                🔗 رابط الجروب
-              </button>
-            </div>
-
-            <!-- Panel 1: Import WhatsApp Chat File (_chat.txt) -->
-            <div id="cPanelFile" class="space-y-3 text-right">
-              <div class="bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800 space-y-2">
-                <div class="font-bold text-xs text-white">خطوات استخراج الشات من واتساب في 10 ثوانٍ:</div>
-                <div class="text-xs text-slate-300 space-y-1 pr-2 border-r-2 border-emerald-500/50">
-                  <div>1. افتح جروب الحملة في تطبيق WhatsApp على هاتفك.</div>
-                  <div>2. اضغط على القائمة (الثلاث نقاط ⋮) > <strong>المزيد (More)</strong>.</div>
-                  <div>3. اضغط على <strong>«نقل الدردشة» أو «تصدير الدردشة» (Export Chat)</strong>.</div>
-                  <div>4. اختر <strong>«بلا وسائط» (Without Media)</strong>، ثم اختر الملف بالزر أدناه:</div>
+                <div>
+                  <h3 class="font-bold text-sm text-white flex items-center gap-1.5">
+                    <span>🔗</span>
+                    <span>الربط برابط دعوة الجروب (Group Invite Link)</span>
+                  </h3>
+                  <div class="text-[11px] text-amber-400 font-semibold">لربط الجروب بصفحة المنظومة والمتابعة المباشرة</div>
                 </div>
-
-                <button type="button" onclick="triggerChatFileSelect()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-[0.98] mt-2">
-                  <span class="text-lg">📁</span>
-                  <span>اختيار ملف الشات (_chat.txt) وقراءته فوراً</span>
-                </button>
               </div>
             </div>
 
-            <!-- Panel 2: Paste Messages Directly -->
-            <div id="cPanelPaste" class="space-y-2 text-right hidden">
-              <div class="text-xs font-bold text-slate-200">الصق نصوص الرسائل أو أذون الخروج من الجروب:</div>
-              <textarea id="chatPasteArea" rows="4" placeholder="مثال:&#10;خروج سيارة [ 102 حكومي ] عداد 48500 كم - السائق أحمد مصطفى&#10;بون وقود سيارة [ 305 حكومي ] 50 لتر&#10;عودة سيارة [ 102 حكومي ] عداد 48620 كم" class="w-full bg-slate-950 border border-slate-700 rounded-2xl p-3 text-white text-xs focus:outline-none focus:border-emerald-500 font-mono"></textarea>
-              <button type="button" onclick="parseFromPasteBox()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow transition active:scale-[0.98]">
-                <span>⚡</span>
-                <span>تحليل الرسائل الملصوقة وتحديث الأسطول فوراً</span>
-              </button>
-            </div>
-
-            <!-- Panel 3: WhatsApp Group Link -->
-            <div id="cPanelLink" class="space-y-3 text-right hidden">
-              <div class="space-y-1.5">
+            <div class="space-y-2.5 text-right">
+              <div class="space-y-1">
                 <label class="text-xs font-bold text-slate-200">رابط دعوة جروب الواتساب:</label>
                 <input type="text" id="loginGroupLink" placeholder="https://chat.whatsapp.com/XXXXX" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-emerald-500 text-left font-mono">
               </div>
 
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-200">اسم الجروب أو الحملة:</label>
-                <input type="text" id="loginGroupName" value="جروب حركة وسيارات الحملة المركزية" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-emerald-500 font-bold">
-              </div>
-
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-200">رقم هاتف المدير لتلقي التنبيهات السرية:</label>
-                <input type="text" id="loginAdminPhone" value="01092519210" placeholder="010XXXXXXXX" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-emerald-500 text-left font-mono">
-              </div>
-
-              <div class="pt-1 flex items-center gap-2">
-                <a href="whatsapp://" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition border border-slate-700 shadow">
-                  <span>💬</span>
-                  <span>فتح واتساب</span>
-                </a>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-slate-200">اسم الجروب / الحملة:</label>
+                  <input type="text" id="loginGroupName" value="جروب حركة وسيارات الحملة المركزية" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500 font-bold">
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-bold text-slate-200">هاتف المدير للتنبيهات:</label>
+                  <input type="text" id="loginAdminPhone" value="01092519210" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
               </div>
             </div>
 
-          </div>
-
-          <!-- Remember Login Switch -->
-          <div class="bg-gradient-to-r from-slate-900 to-slate-900/90 border border-emerald-500/40 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 flex-shrink-0 text-base">
-                🔐
+            <!-- Remember Login Switch -->
+            <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🔐</span>
+                <div>
+                  <div class="text-xs font-bold text-white">الاحتفاظ بتسجيل الدخول</div>
+                  <div class="text-[10.5px] text-slate-400">تذكر هذا الجروب وتخطي هذه الواجهة في كل مرة</div>
+                </div>
               </div>
-              <div class="min-w-0">
-                <label for="loginKeepMe" class="text-xs font-bold text-white cursor-pointer block">الاحتفاظ بتسجيل الدخول</label>
-                <p class="text-[11px] text-slate-400">تذكر هذا الجروب وفتح لوحة المتابعة تلقائياً في كل مرة تفتح فيها الموقع</p>
-              </div>
+              <input type="checkbox" id="loginKeepMe" ${appState.session.keepLoggedIn ? 'checked' : ''} class="w-5 h-5 accent-emerald-500 cursor-pointer">
             </div>
-            <input type="checkbox" id="loginKeepMe" ${appState.session.keepLoggedIn ? 'checked' : ''} class="w-5 h-5 accent-emerald-500 cursor-pointer flex-shrink-0">
-          </div>
 
-          <!-- Action Buttons: Main Login -->
-          <div class="space-y-2.5 pt-1">
-            <button onclick="handleGroupLogin()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-4 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-950 transition active:scale-[0.98]">
-              <span class="text-xl">🚀</span>
-              <span>تسجيل وقراءة الجروب وبدء المتابعة</span>
-            </button>
+            <!-- Direct Entry Buttons -->
+            <div class="space-y-2 pt-1">
+              <button type="button" onclick="handleGroupLogin()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-[0.98]">
+                <span>🚀</span>
+                <span>تسجيل وقراءة الجروب وبدء المتابعة الكاملة</span>
+              </button>
 
-            <button onclick="quickDemoLogin()" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition active:scale-[0.98]">
-              <span>⚡</span>
-              <span>دخول مباشر بالبيانات النموذجية للحملة</span>
-            </button>
+              <button type="button" onclick="quickDemoLogin()" class="w-full bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition active:scale-[0.98]">
+                <span>⚡</span>
+                <span>دخول مباشر وفوري لبيانات الأسطول</span>
+              </button>
+            </div>
           </div>
 
           <!-- Official Developer Signature -->
@@ -1512,6 +1638,7 @@
             <div class="text-xs text-slate-400 font-medium">صُمم وطُوّر بواسطة</div>
             <div class="text-base font-black text-amber-400 tracking-wider">ABDOU ALI MOUSA</div>
           </div>
+
         </div>
       `;
     }
@@ -1862,6 +1989,15 @@
       closeCrudModal();
       render();
     }
+
+    // Check for incoming Web Share Target from WhatsApp
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedText = urlParams.get('text') || urlParams.get('title') || urlParams.get('url');
+      if (sharedText) {
+        parseAndImportWhatsAppChat(sharedText);
+      }
+    } catch(e) {}
 
     // Initial load
     render();
